@@ -1,0 +1,177 @@
+{
+  "info": {
+    "id": "supervisor",
+    "version": "1.2.27",
+    "time": {
+      "created": 1793959200000
+    }
+  },
+  "messages": [
+    {
+      "info": {
+        "id": "turn-1",
+        "sessionID": "supervisor",
+        "role": "user",
+        "time": {
+          "created": 1793959200000
+        }
+      },
+      "parts": [
+        {
+          "id": "prompt",
+          "type": "text",
+          "text": "PRIVATE_PROMPT"
+        }
+      ]
+    },
+    {
+      "info": {
+        "id": "message-1",
+        "sessionID": "supervisor",
+        "role": "assistant",
+        "parentID": "turn-1",
+        "modelID": "model-a",
+        "providerID": "provider",
+        "variant": "high",
+        "time": {
+          "created": 1793959201000,
+          "completed": 1793959206000
+        },
+        "finish": "stop",
+        "tokens": {
+          "input": 30,
+          "output": 30,
+          "reasoning": 10,
+          "cache": {
+            "read": 60,
+            "write": 10
+          }
+        }
+      },
+      "parts": [
+        {
+          "id": "step-1",
+          "sessionID": "supervisor",
+          "messageID": "message-1",
+          "type": "step-finish",
+          "reason": "stop",
+          "tokens": {
+            "input": 30,
+            "output": 30,
+            "reasoning": 10,
+            "cache": {
+              "read": 60,
+              "write": 10
+            }
+          }
+        },
+        {
+          "id": "tool-1",
+          "sessionID": "supervisor",
+          "messageID": "message-1",
+          "type": "tool",
+          "callID": "shell",
+          "tool": "bash",
+          "state": {
+            "status": "error",
+            "input": {
+              "command": "PRIVATE_ARGUMENTS"
+            },
+            "error": "PRIVATE_OUTPUT",
+            "time": {
+              "start": 1793959202000,
+              "end": 1793959203000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "id": "turn-2",
+        "sessionID": "supervisor",
+        "role": "user",
+        "time": {
+          "created": 1793959260000
+        }
+      },
+      "parts": []
+    },
+    {
+      "info": {
+        "id": "message-2",
+        "sessionID": "supervisor",
+        "role": "assistant",
+        "parentID": "turn-2",
+        "modelID": "model-b",
+        "providerID": "provider",
+        "variant": "low",
+        "time": {
+          "created": 1793959260000,
+          "completed": 1793959262000
+        },
+        "finish": "stop",
+        "tokens": {
+          "input": 40,
+          "output": 20,
+          "reasoning": 5,
+          "cache": {
+            "read": 10,
+            "write": 0
+          }
+        }
+      },
+      "parts": [
+        {
+          "id": "step-2",
+          "sessionID": "supervisor",
+          "messageID": "message-2",
+          "type": "step-finish",
+          "reason": "stop",
+          "tokens": {
+            "input": 40,
+            "output": 20,
+            "reasoning": 5,
+            "cache": {
+              "read": 10,
+              "write": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "id": "unselected",
+        "sessionID": "supervisor",
+        "role": "user",
+        "time": {
+          "created": 1793959320000
+        }
+      },
+      "parts": []
+    },
+    {
+      "info": {
+        "id": "excluded",
+        "sessionID": "supervisor",
+        "role": "assistant",
+        "parentID": "unselected",
+        "modelID": "model-x",
+        "time": {
+          "created": 1793959320000,
+          "completed": 1793959321000
+        },
+        "tokens": {
+          "input": 99999,
+          "output": 99999,
+          "cache": {
+            "read": 0,
+            "write": 0
+          }
+        }
+      },
+      "parts": []
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "info": {
+    "id": "ses_fixture",
+    "projectID": "global",
+    "cost": 0,
+    "tokens": {
+      "input": 40,
+      "output": 20,
+      "reasoning": 5,
+      "cache": {
+        "read": 10,
+        "write": 0
+      }
+    },
+    "time": {
+      "created": 1000,
+      "updated": 7000
+    },
+    "title": "Capture fixture",
+    "location": {
+      "directory": "/tmp"
+    }
+  },
+  "messages": [
+    {
+      "id": "msg_old",
+      "type": "user",
+      "text": "Earlier unrelated work",
+      "time": {
+        "created": 1000
+      }
+    },
+    {
+      "id": "msg_oldidle",
+      "type": "idle",
+      "outcome": "succeeded",
+      "time": {
+        "created": 2000
+      }
+    },
+    {
+      "id": "msg_current",
+      "type": "user",
+      "text": "AGENTIC_WORKFLOW {\"implementation\":\"001_demo\",\"task\":\"work\",\"role\":\"implementer\"}",
+      "time": {
+        "created": 3000
+      }
+    },
+    {
+      "id": "msg_step",
+      "type": "assistant",
+      "agent": "build",
+      "model": {
+        "providerID": "openai",
+        "id": "fixture",
+        "variant": "high"
+      },
+      "tokens": {
+        "input": 40,
+        "output": 20,
+        "reasoning": 5,
+        "cache": {
+          "read": 10,
+          "write": 0
+        }
+      },
+      "finish": "stop",
+      "content": [
+        {
+          "type": "text",
+          "text": "Done"
+        },
+        {
+          "type": "tool",
+          "id": "call_shell",
+          "name": "shell",
+          "state": {
+            "status": "completed",
+            "input": {
+              "command": "true"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ok"
+              }
+            ]
+          },
+          "time": {
+            "created": 4000,
+            "ran": 4100,
+            "completed": 4500
+          }
+        }
+      ],
+      "time": {
+        "created": 3500,
+        "completed": 5000
+      }
+    },
+    {
+      "id": "msg_idle",
+      "type": "idle",
+      "outcome": "succeeded",
+      "time": {
+        "created": 6000
+      }
+    }
+  ]
+}

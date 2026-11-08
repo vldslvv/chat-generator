@@ -1,0 +1,6 @@
+interface:
+  display_name: "Agentic Workflow Acceptance"
+  short_description: "Turn planning discussions into acceptance specifications"
+  default_prompt: "Use $agentic-workflow-acceptance for the agreed requirements I provide."
+policy:
+  allow_implicit_invocation: false
