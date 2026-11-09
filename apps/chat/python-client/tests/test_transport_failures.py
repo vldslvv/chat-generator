@@ -40,7 +40,10 @@ async def main():
                 await asyncio.sleep(0.05)
                 state = ClientState(url, connection=socket)
                 correlations = protocol.Correlations(login=correlation)
-                async for _ in transport.receive(state, correlations):
+                async for _ in transport.receive(
+                    state, correlations,
+                    lambda data: transport.pong(socket, data, correlation),
+                ):
                     pass
         except (aiohttp.ClientError, OSError, ReportedFailure):
             pass

@@ -1,5 +1,4 @@
 import json
-import time
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
@@ -176,25 +175,45 @@ def test_rejected_actions_keep_connections_usable(clients):
         alice.recv(timeout=0.05)
 
 
-def test_disconnect_persistence_offline_rejection_and_no_replay(server):
+def test_offline_delivery_order_sender_name_and_acknowledgment_replay(server):
     url, _ = server
     with connect(url) as alice:
         alice_user = login(alice, "alice")
         with connect(url) as bob:
             bob_user = login(bob, "bob")
-            message = sent_message(alice, bob)
-        deadline = time.monotonic() + 2
-        while True:
-            request(alice, "send", {"recipient": "bob", "text": "offline"})
+            first = sent_message(alice, bob)
+        accepted = [first]
+        for text, timestamp in [
+            ("offline first", "2026-11-08T13:00:00Z"),
+            ("offline second", "2026-11-08T12:00:00Z"),
+        ]:
+            correlation = request(
+                alice, "send", {"recipient": "bob", "text": text, "client_sent_at": timestamp}
+            )
             reply = receive(alice)
-            if reply["type"] == "error":
-                break
             assert reply["type"] == "message_accepted"
-            assert time.monotonic() < deadline, "Disconnect was not detected"
-            time.sleep(0.01)
+            assert reply["correlation_id"] == correlation
+            assert "sender_name" not in reply["data"]
+            accepted.append(reply["data"])
     with connect(url) as bob:
         assert login(bob, "bob") == bob_user
-        request(bob, "ack", {"message_id": message["id"]})
+        for message in accepted:
+            assert receive(bob) == {
+                "type": "message_received",
+                "data": {**message, "sender_name": "alice"},
+            }
+        request(bob, "ack", {"message_id": accepted[1]["id"]})
+        # The next response establishes that the acknowledgment was processed.
+        request(bob, "login", {"name": "bob"})
+        assert receive(bob)["type"] == "error"
+        with pytest.raises(TimeoutError):
+            bob.recv(timeout=0.1)
+    with connect(url) as bob:
+        assert login(bob, "bob") == bob_user
+        assert [receive(bob)["data"]["id"] for _ in range(2)] == [
+            accepted[0]["id"],
+            accepted[2]["id"],
+        ]
         with pytest.raises(TimeoutError):
             bob.recv(timeout=0.1)
     with connect(url) as alice:
@@ -206,11 +225,12 @@ def test_disconnect_persistence_offline_rejection_and_no_replay(server):
 def test_new_server_discards_users_and_messages():
     with running_server() as (url, _), connect(url) as client:
         original_user = login(client, "alice")
-        request(client, "send", {"recipient": "alice", "text": "self"})
-        incoming = receive(client)
-        assert incoming["type"] == "message_received"
-        accepted = receive(client)
-        assert accepted["type"] == "message_accepted"
+        correlation = request(client, "send", {"recipient": "alice", "text": "self"})
+        events = {event["type"]: event for event in (receive(client), receive(client))}
+        assert set(events) == {"message_accepted", "message_received"}
+        accepted, incoming = events["message_accepted"], events["message_received"]
+        assert accepted["correlation_id"] == correlation
+        assert "correlation_id" not in incoming
         assert "sender_name" not in accepted["data"]
         assert incoming["data"] == {**accepted["data"], "sender_name": "alice"}
     with running_server() as (url, _), connect(url) as client:

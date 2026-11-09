@@ -1,8 +1,9 @@
 """Connection data and explicit session transitions."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
+from uuid import UUID
 
 from aiohttp import ClientWebSocketResponse
 
@@ -22,6 +23,14 @@ class SessionState(StrEnum):
 
 
 @dataclass
+class QueuedMessage:
+    sender_name: str
+    recipient: str
+    text: str
+    correlation_id: UUID | None = None
+
+
+@dataclass
 class ClientState:
     server_url: str
     connection: ClientWebSocketResponse | None = None
@@ -31,6 +40,7 @@ class ClientState:
     authenticated_user: User | None = None
     remembered_username: str | None = None
     last_heartbeat_at: datetime | None = None
+    outgoing_queue: list[QueuedMessage] = field(default_factory=list)
 
 
 def begin_connection(state: ClientState, username: str) -> None:
@@ -51,3 +61,5 @@ def reset_connection(state: ClientState) -> None:
     state.session_state = SessionState.NONE
     state.login_username = None
     state.authenticated_user = None
+    for entry in state.outgoing_queue:
+        entry.correlation_id = None

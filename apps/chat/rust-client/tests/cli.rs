@@ -179,6 +179,175 @@ fn message(id: Uuid, text: &str) -> Value {
 }
 
 #[tokio::test]
+async fn offline_queue_retains_attempts_in_order_and_isolates_sending_users() {
+    let (listener, url) = listener().await;
+    let mut cli = Cli::start(&url).await;
+    let mut peer = login(&mut cli, &listener, "/connect alice", "alice").await;
+    cli.command("/drop-connection").await;
+    cli.until("Disconnected").await;
+    drop(peer);
+    for command in ["/send bob   first  text ", "/send carol second"] {
+        cli.command(command).await;
+        cli.until("✓ Queued locally").await;
+    }
+    let before = Utc::now();
+    peer = login(&mut cli, &listener, "/connect", "alice").await;
+    let first = request(&mut peer, "send").await;
+    let second = request(&mut peer, "send").await;
+    assert_eq!(first["data"]["recipient"], "bob");
+    assert_eq!(first["data"]["text"], "  first  text ");
+    assert_eq!(second["data"]["recipient"], "carol");
+    assert_eq!(second["data"]["text"], "second");
+    assert_ne!(first["correlation_id"], second["correlation_id"]);
+    for sent in [&first, &second] {
+        let sent_at =
+            DateTime::parse_from_rfc3339(sent["data"]["client_sent_at"].as_str().unwrap()).unwrap();
+        assert!(sent_at >= before && sent_at <= Utc::now());
+    }
+    let unknown = Uuid::new_v4().to_string();
+    reply(
+        &mut peer,
+        json!({"type":"message_accepted", "correlation_id":unknown,
+        "data":message(Uuid::new_v4(),"unknown")}),
+    )
+    .await;
+    cli.diagnostic("mismatched correlation ID", Some(&unknown))
+        .await;
+    reply(
+        &mut peer,
+        json!({"type":"error", "correlation_id":first["correlation_id"],
+        "data":{"message":"Recipient does not exist"}}),
+    )
+    .await;
+    cli.diagnostic("Recipient does not exist", first["correlation_id"].as_str())
+        .await;
+    let accepted = Uuid::new_v4();
+    reply(
+        &mut peer,
+        json!({"type":"message_accepted", "correlation_id":second["correlation_id"],
+        "data":message(accepted,"second")}),
+    )
+    .await;
+    cli.until(&format!("✓ Accepted {accepted}")).await;
+    cli.command("/send bob third").await;
+    let third = request(&mut peer, "send").await;
+    assert_eq!(third["data"]["text"], "third");
+    assert!(
+        timeout(Duration::from_millis(100), peer.next())
+            .await
+            .is_err()
+    );
+    cli.command("/drop-connection").await;
+    cli.until("Disconnected").await;
+    drop(peer);
+    cli.command("/send bob fourth").await;
+    cli.until("✓ Queued locally").await;
+
+    peer = login(&mut cli, &listener, "/connect bob", "bob").await;
+    assert!(
+        timeout(Duration::from_millis(100), peer.next())
+            .await
+            .is_err()
+    );
+    cli.command("/send alice bob pending").await;
+    let bob_attempt = request(&mut peer, "send").await;
+    assert_eq!(bob_attempt["data"]["text"], "bob pending");
+    cli.command("/drop-connection").await;
+    cli.until("Disconnected").await;
+    drop(peer);
+
+    peer = login(&mut cli, &listener, "/connect alice", "alice").await;
+    let retried = request(&mut peer, "send").await;
+    assert_eq!(retried["data"]["text"], "  first  text ");
+    assert_ne!(retried["correlation_id"], first["correlation_id"]);
+    let retried_third = request(&mut peer, "send").await;
+    assert_eq!(retried_third["data"]["text"], "third");
+    assert_ne!(retried_third["correlation_id"], third["correlation_id"]);
+    assert_eq!(request(&mut peer, "send").await["data"]["text"], "fourth");
+    assert!(
+        timeout(Duration::from_millis(100), peer.next())
+            .await
+            .is_err()
+    );
+    reply(
+        &mut peer,
+        json!({"type":"message_accepted", "correlation_id":first["correlation_id"],
+        "data":message(Uuid::new_v4(),"stale")}),
+    )
+    .await;
+    cli.diagnostic(
+        "mismatched correlation ID",
+        first["correlation_id"].as_str(),
+    )
+    .await;
+    cli.command("/drop-connection").await;
+    cli.until("Disconnected").await;
+    drop(peer);
+
+    peer = login(&mut cli, &listener, "/connect", "alice").await;
+    for text in ["  first  text ", "third", "fourth"] {
+        let sent = request(&mut peer, "send").await;
+        assert_eq!(sent["data"]["text"], text);
+        let id = Uuid::new_v4();
+        reply(
+            &mut peer,
+            json!({"type":"message_accepted", "correlation_id":sent["correlation_id"],
+            "data":message(id,text)}),
+        )
+        .await;
+        cli.until(&format!("✓ Accepted {id}")).await;
+    }
+    cli.command("/disconnect").await;
+    assert!(matches!(frame(&mut peer).await, Message::Close(_)));
+    peer.flush().await.unwrap();
+    cli.until("Disconnected").await;
+    peer = login(&mut cli, &listener, "/connect bob", "bob").await;
+    let bob_retry = request(&mut peer, "send").await;
+    assert_eq!(bob_retry["data"]["text"], "bob pending");
+    assert_ne!(bob_retry["correlation_id"], bob_attempt["correlation_id"]);
+    cli.command("/disconnect").await;
+    assert!(matches!(frame(&mut peer).await, Message::Close(_)));
+    peer.flush().await.unwrap();
+    cli.until("Disconnected").await;
+    cli.quit().await;
+}
+
+#[tokio::test]
+async fn reconnect_flush_keeps_incoming_events_and_commands_responsive_under_backpressure() {
+    let (listener, url) = listener().await;
+    let mut cli = Cli::start(&url).await;
+    let peer = login(&mut cli, &listener, "/connect alice", "alice").await;
+    cli.command("/drop-connection").await;
+    cli.until("Disconnected").await;
+    drop(peer);
+    let command = format!("/send bob {}", "x".repeat(32768));
+    for _ in 0..512 {
+        cli.command(&command).await;
+        cli.until("✓ Queued locally").await;
+    }
+    let mut peer = login(&mut cli, &listener, "/connect", "alice").await;
+    let _ = request(&mut peer, "send").await;
+    peer.send(Message::Ping(b"during flush".to_vec().into()))
+        .await
+        .unwrap();
+    let mut incoming = message(Uuid::new_v4(), "event during flush");
+    incoming["sender_name"] = json!("bob");
+    reply(
+        &mut peer,
+        json!({"type":"message_received", "data":incoming}),
+    )
+    .await;
+    // Keep the peer's receive side stalled while checking both independent inputs.
+    cli.until("← bob: event during flush").await;
+    cli.command("/status").await;
+    assert_ne!(cli.until("Last heartbeat:").await, "Last heartbeat: never");
+    assert!(cli.transcript.contains("Session: logged in\nUser: alice"));
+    cli.command("/drop-connection").await;
+    cli.until("Disconnected").await;
+    cli.quit().await;
+}
+
+#[tokio::test]
 async fn local_commands_validate_and_stay_usable_without_connection() {
     let mut cli = Cli::start("ws://127.0.0.1:1/ws").await;
     cli.command("/status").await;
@@ -362,8 +531,16 @@ async fn messages_acknowledge_after_display_and_disconnect_remembers_only_succes
     cli.diagnostic("mismatched correlation ID", Some(&wrong_correlation))
         .await;
     cli.command("/send bob overlapping").await;
-    cli.diagnostic("a send is pending", sent["correlation_id"].as_str())
-        .await;
+    let overlapping = request(&mut peer, "send").await;
+    assert_eq!(overlapping["data"]["text"], "overlapping");
+    let overlapping_id = Uuid::new_v4();
+    reply(
+        &mut peer,
+        json!({"type":"message_accepted", "correlation_id":overlapping["correlation_id"],
+        "data":message(overlapping_id,"overlapping")}),
+    )
+    .await;
+    cli.until(&format!("✓ Accepted {overlapping_id}")).await;
     reply(&mut peer, json!({"type":"message_accepted", "correlation_id":sent["correlation_id"], "data":message(id,"  hello  world  ")})).await;
     cli.until(&format!("✓ Accepted {id}")).await;
     assert!(
@@ -422,9 +599,6 @@ async fn messages_acknowledge_after_display_and_disconnect_remembers_only_succes
             .unwrap()
             .is_none_or(|frame| frame.is_err())
     );
-    cli.command("/send bob no queue").await;
-    cli.diagnostic("Cannot use /send while logged out", None)
-        .await;
     cli.command("/status").await;
     assert_eq!(cli.until("Last heartbeat:").await, heartbeat);
     assert!(
@@ -437,11 +611,9 @@ async fn messages_acknowledge_after_display_and_disconnect_remembers_only_succes
             .is_err()
     );
     let mut peer = login(&mut cli, &listener, "/connect", "alice").await;
-    assert!(
-        timeout(Duration::from_millis(100), peer.next())
-            .await
-            .is_err()
-    );
+    let retry = request(&mut peer, "send").await;
+    assert_eq!(retry["data"]["text"], "rejected");
+    assert_ne!(retry["correlation_id"], rejected["correlation_id"]);
     cli.command("/quit").await;
     assert!(matches!(frame(&mut peer).await, Message::Close(_)));
     peer.flush().await.unwrap();
@@ -484,9 +656,13 @@ async fn server_connection_loss_resets_authentication_without_reconnecting() {
             .is_err()
     );
     let mut peer = login(&mut cli, &listener, "/connect", "alice").await;
-    cli.command("/disconnect").await;
+    let retry = request(&mut peer, "send").await;
+    assert_eq!(retry["data"]["text"], "awaiting response");
+    assert_ne!(retry["correlation_id"], pending["correlation_id"]);
+    peer.close(None).await.unwrap();
     assert!(matches!(frame(&mut peer).await, Message::Close(_)));
-    peer.flush().await.unwrap();
+    cli.until("Connection closed by server. Use /connect to reconnect")
+        .await;
     cli.until("Disconnected").await;
     cli.quit().await;
 }

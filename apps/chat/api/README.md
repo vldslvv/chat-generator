@@ -2,6 +2,8 @@
 
 The API serves the shared [WebSocket contract](../../../specs/spec_chat/contracts/websocket.md) at `ws://localhost:8000/ws`.
 It keeps users and messages in memory until the server stops.
+Sends to existing offline users are accepted and retained until acknowledgment.
+Every login replays pending messages in server acceptance order, even when their senders are offline.
 
 Run from this directory with Python 3.12 or newer and uv installed.
 

@@ -1,4 +1,7 @@
-use crate::state::{self, ClientState, SessionState};
+use crate::{
+    queue,
+    state::{self, ClientState, SessionState},
+};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -78,7 +81,6 @@ struct Request<'a> {
 #[derive(Default)]
 pub struct ProtocolState {
     pub login_correlation: Option<Uuid>,
-    pub send_correlation: Option<Uuid>,
 }
 
 fn request(action: &str, data: Value) -> (Uuid, String) {
@@ -95,11 +97,13 @@ pub fn login(name: &str) -> (Uuid, String) {
     request("login", json!({"name": name}))
 }
 
-pub fn send(recipient: &str, text: &str) -> (Uuid, String) {
-    request(
-        "send",
-        json!({"recipient": recipient, "text": text, "client_sent_at": Utc::now()}),
-    )
+pub fn send(correlation_id: Uuid, recipient: &str, text: &str) -> String {
+    serde_json::to_string(&Request {
+        action: "send",
+        correlation_id,
+        data: json!({"recipient": recipient, "text": text, "client_sent_at": Utc::now()}),
+    })
+    .unwrap()
 }
 
 pub fn acknowledge(id: Uuid, received_at: DateTime<Utc>) -> String {
@@ -119,6 +123,7 @@ pub struct Effect {
     pub display: Option<String>,
     pub acknowledgment: Option<String>,
     pub diagnostic: Option<(String, Option<Uuid>)>,
+    pub logged_in: bool,
 }
 
 pub fn correlation(text: &str) -> Option<Uuid> {
@@ -131,6 +136,7 @@ pub fn handle(state: &mut ClientState, protocol: &mut ProtocolState, text: &str)
         display: None,
         acknowledgment: None,
         diagnostic: None,
+        logged_in: false,
     };
     let (envelope, received_at) = match decode(text) {
         Ok(decoded) => decoded,
@@ -148,14 +154,15 @@ pub fn handle(state: &mut ClientState, protocol: &mut ProtocolState, text: &str)
             effect.display = Some(format!("✓ Logged in as {}", user.name));
             state::logged_in(state, user);
             protocol.login_correlation = None;
+            effect.logged_in = true;
         }
         ServerEvent::MessageAccepted(message)
-            if protocol.send_correlation.is_some()
-                && envelope.correlation_id == protocol.send_correlation
-                && state.session_state == SessionState::LoggedIn =>
+            if state.session_state == SessionState::LoggedIn
+                && envelope.correlation_id.is_some_and(|correlation| {
+                    queue::accept(&mut state.outgoing_queue, correlation)
+                }) =>
         {
             effect.display = Some(format!("✓ Accepted {}", message.id));
-            protocol.send_correlation = None;
         }
         ServerEvent::MessageReceived(message)
             if envelope.correlation_id.is_none()
@@ -169,11 +176,6 @@ pub fn handle(state: &mut ClientState, protocol: &mut ProtocolState, text: &str)
         }
         ServerEvent::Error { message } => {
             effect.diagnostic = Some((message, envelope.correlation_id));
-            if envelope.correlation_id.is_some()
-                && envelope.correlation_id == protocol.send_correlation
-            {
-                protocol.send_correlation = None;
-            }
             if matches_login {
                 protocol.login_correlation = None;
                 state.login_username = None;

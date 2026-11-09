@@ -152,7 +152,6 @@ def ack_request(message_id: UUID, received_at: datetime) -> Request:
 @dataclass
 class Correlations:
     login: UUID | None = None
-    send: UUID | None = None
 
 
 async def handle_event(
@@ -161,7 +160,9 @@ async def handle_event(
     correlations: Correlations,
     write: Callable[[Request], Awaitable[None]],
     emit: Callable[[str], Awaitable[None]],
+    flush: Callable[[], None],
 ) -> None:
+    from .outgoing import accept
     from .state import SessionState, complete_login
 
     event, received_at = decode_event(raw)
@@ -171,11 +172,10 @@ async def handle_event(
         complete_login(state, event.data)
         await emit(f"✓ Logged in as {event.data.name}")
         correlations.login = None
+        flush()
     elif isinstance(event, Accepted):
-        if event.correlation_id != correlations.send:
-            raise ValueError("Unexpected send reply")
+        accept(state, event.correlation_id)
         await emit(f"✓ Accepted {event.data.id}")
-        correlations.send = None
     elif isinstance(event, Received):
         await emit(f"← {event.data.sender_name}: {event.data.text}")
         await write(ack_request(event.data.id, received_at))
@@ -188,5 +188,3 @@ async def handle_event(
             correlations.login = None
             state.login_username = None
             state.session_state = SessionState.NONE
-        if correlations.send is not None and event.correlation_id == correlations.send:
-            correlations.send = None

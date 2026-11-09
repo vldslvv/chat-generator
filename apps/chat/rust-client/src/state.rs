@@ -1,4 +1,4 @@
-use crate::{protocol::User, transport::Connection};
+use crate::{protocol::User, queue, transport::Connection};
 use chrono::{DateTime, Utc};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -24,6 +24,7 @@ pub struct ClientState {
     pub authenticated_user: Option<User>,
     pub remembered_username: Option<String>,
     pub last_heartbeat_at: Option<DateTime<Utc>>,
+    pub outgoing_queue: queue::OutgoingQueue,
 }
 
 pub fn initial(server_url: String) -> ClientState {
@@ -36,6 +37,7 @@ pub fn initial(server_url: String) -> ClientState {
         authenticated_user: None,
         remembered_username: None,
         last_heartbeat_at: None,
+        outgoing_queue: queue::OutgoingQueue::new(),
     }
 }
 
@@ -45,6 +47,7 @@ pub fn disconnected(state: &mut ClientState) {
     state.session_state = SessionState::None;
     state.login_username = None;
     state.authenticated_user = None;
+    queue::reset_attempts(&mut state.outgoing_queue);
 }
 
 pub fn logged_in(state: &mut ClientState, user: User) {

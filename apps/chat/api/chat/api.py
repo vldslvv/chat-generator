@@ -1,12 +1,16 @@
 import json
 import logging
+from dataclasses import asdict
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.encoders import jsonable_encoder
 from pydantic import ValidationError
 
+from chat import delivery
 from chat.handling import handle
-from chat.protocol import correlation_id, event, request_adapter, server_timestamp
-from chat.sessions import Sessions, disconnect
+from chat.models import Message, User
+from chat.protocol import Login, Send, correlation_id, event, request_adapter, server_timestamp
+from chat.sessions import Sessions, disconnect, online_connection
 from chat.storage import Storage
 
 logger = logging.getLogger("chat.api")
@@ -35,6 +39,7 @@ def create_app() -> FastAPI:
     app = FastAPI()
     store = Storage()
     active = Sessions()
+    outbound = delivery.Delivery()
 
     @app.websocket("/ws")
     async def websocket(connection: WebSocket) -> None:
@@ -57,18 +62,40 @@ def create_app() -> FastAPI:
                     correlation = correlation_id(raw)
                     # JSON-mode validation accepts wire UUID strings while retaining strict fields.
                     request = request_adapter.validate_json(frame["text"])
-                    reply = await handle(store, active, connection, request, received_at)
-                    if reply is not None:
-                        reply["correlation_id"] = correlation
+                    recipient = (
+                        request.data.name
+                        if isinstance(request, Login)
+                        else request.data.recipient
+                        if isinstance(request, Send)
+                        else None
+                    )
+                    async with delivery.recipient_turn(outbound, recipient):
+                        result = handle(store, active, connection, request, received_at)
+                        try:
+                            if result is not None:
+                                kind = (
+                                    "login_ok" if isinstance(result, User) else "message_accepted"
+                                )
+                                await connection.send_json(
+                                    event(kind, jsonable_encoder(asdict(result)), correlation)
+                                )
+                        finally:
+                            if (
+                                isinstance(result, Message)
+                                and online_connection(active, result.recipient_id) is not None
+                            ):
+                                await delivery.deliver_message(store, active, result, correlation)
+                        if isinstance(result, User):
+                            await delivery.flush_messages(store, active, result.id, correlation)
                 except (ValueError, ValidationError) as error:
                     logger.warning(
                         "Request rejected correlation_id=%s cause=%s",
                         correlation,
                         rejection_cause(error),
                     )
-                    reply = event("error", {"message": "Invalid request"}, correlation)
-                if reply is not None:
-                    await connection.send_json(reply)
+                    await connection.send_json(
+                        event("error", {"message": "Invalid request"}, correlation)
+                    )
         except WebSocketDisconnect as error:
             if error.code not in (1000, 1001):
                 logger.exception(

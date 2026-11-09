@@ -1,6 +1,6 @@
 # Local chat
 
-The FastAPI server provides online messaging at `ws://localhost:8000/ws` with in-memory users and messages.
+The FastAPI server provides online and offline messaging at `ws://localhost:8000/ws` with in-memory users and messages.
 Run one server process so all connections share the same state.
 The API and both clients log rejected requests and operational failures to stderr,
 including the cause and any available correlation ID.
@@ -65,7 +65,12 @@ Use `/disconnect` to close gracefully or `/drop-connection` to terminate the soc
 Use `/connect` to reconnect with the last successfully logged-in name.
 Use `/help` to list commands and `/quit` to exit.
 Both clients keep accepting terminal commands after connection loss.
-Messages are delivered only to users currently online; clients do not retry or reconnect automatically.
+Messages for existing offline users stay pending on the server until acknowledged.
+After a successful login, the server delivers pending messages in acceptance order,
+even when their senders are offline. Clients retain outgoing messages in memory
+until acceptance and resume sending when the same user reconnects.
+An offline `/send` reports `✓ Queued locally`. Clients do not reconnect automatically,
+and queues do not survive process restarts.
 
 Interactive terminals show a `> ` prompt and preserve unfinished input when a
 message arrives. Incoming messages appear as `← alice: Hello`, using the sender's
@@ -85,3 +90,29 @@ docker run --rm -p 8000:8000 local-chat
 Each client directory also contains a Dockerfile.
 Build it in that directory and run it with `docker run --rm -it`, passing
 `--url` with a server address reachable from the container.
+
+## Offline delivery test and demo
+
+Install both Python environments with `uv sync --frozen` in their respective API
+and client directories; install Cargo to build the Rust client.
+Run these commands from the repository root:
+
+```sh
+make test-offline-delivery
+make demo-offline-delivery
+```
+
+Both commands build the Rust binary and start a fresh server on an available local
+port. The headless pytest run checks Alice in Python and Bob in Rust, then swaps
+the languages with a fresh server. Each run keeps all three processes alive while
+clients disconnect, queue messages, and reconnect. It checks CLI output and server
+acceptance; API and storage tests verify acknowledgment records and pending state.
+
+The visual demo also requires `tmux` and an interactive terminal. It opens a dedicated
+session with Server, Alice, and Bob panes. Press Space to run the step shown in the
+status line and q to exit. The completed transcript stays visible until you advance
+or exit. If already inside tmux, launch the demo from a terminal outside tmux.
+Viewer pauses do not count toward event timeouts. The runners stop their own
+processes on completion or interruption and leave unrelated tmux sessions alone.
+Failures include the current step and captured output; demo failures save a
+transcript in the reported temporary directory.

@@ -171,8 +171,6 @@ async def test_cli_protocol_heartbeat_and_reconnection():
         assert send["data"]["recipient"] == "bob"
         assert send["data"]["text"] == "hello  there  "
         assert datetime.fromisoformat(send["data"]["client_sent_at"]).tzinfo is not None
-        await cli.command("/send bob overlapping")
-        assert send["correlation_id"] in await cli.error_until("Send in progress")
         assert "✓ Accepted" not in await cli.status()
         message = message_data()
         wrong = {"correlation_id": str(uuid4())}
@@ -214,6 +212,11 @@ async def test_cli_protocol_heartbeat_and_reconnection():
         await cli.until("Logged in as alice")
         assert logins[-1]["data"]["name"] == "alice"
         assert len(logins) == 2
+        for text in ["no retry", "interrupted"]:
+            retained = await next_item(requests)
+            assert retained["data"]["text"] == text
+            await ws.send_json(reply("message_accepted", retained, message_data()))
+            await cli.until("✓ Accepted")
         await cli.command("/send bob fresh after reconnect")
         fresh = await next_item(requests)
         assert fresh["data"]["text"] == "fresh after reconnect"

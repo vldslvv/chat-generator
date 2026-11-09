@@ -20,6 +20,8 @@ WORKFLOW_REASONING ?= medium
 .PHONY: help eval eval-workflow eval-specs trace cleanup clean clean-runs clean-tasks
 
 help:
+	@echo "make test-offline-delivery  Check queued delivery with both client language assignments"
+	@echo "make demo-offline-delivery  Show the offline scenario in tmux; Space advances, q exits"
 	@echo "make eval-specs    Report on current specs against bundle templates; no repairs"
 	@echo "                       SPEC_BUNDLE=specs/todolist (default: all bundles)"
 	@echo "                       SPECS_MODEL=gpt-6-astra SPECS_REASONING=medium SPECS_TIMEOUT=1800 (defaults)"
@@ -55,3 +57,13 @@ clean-runs:
 
 clean-tasks:
 	@cd "$(REPO_ROOT)" && rm -rf -- "$${IMPL:?IMPL must identify an implementation directory}/tasks"
+
+.PHONY: test-offline-delivery demo-offline-delivery
+
+test-offline-delivery:
+	@cd "$(REPO_ROOT)" && cargo build --locked --manifest-path apps/chat/rust-client/Cargo.toml
+	@cd "$(REPO_ROOT)" && uv run --frozen --project apps/chat/api pytest apps/chat/integration/test_offline_delivery.py -v
+
+demo-offline-delivery:
+	@cd "$(REPO_ROOT)" && cargo build --locked --manifest-path apps/chat/rust-client/Cargo.toml
+	@cd "$(REPO_ROOT)" && uv run --frozen --project apps/chat/api python apps/chat/integration/offline_delivery.py

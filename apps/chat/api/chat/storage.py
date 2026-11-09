@@ -14,6 +14,10 @@ def find_user(store: Storage, name: str) -> User | None:
     return store.users.get(name)
 
 
+def find_user_by_id(store: Storage, user_id: UUID) -> User | None:
+    return next((user for user in store.users.values() if user.id == user_id), None)
+
+
 def find_or_create_user(store: Storage, name: str) -> User:
     if name not in store.users:
         store.users[name] = User(uuid4(), name)
@@ -35,6 +39,14 @@ def store_message(
 
 def find_message(store: Storage, message_id: UUID) -> Message | None:
     return store.messages.get(message_id)
+
+
+def list_pending_messages(store: Storage, recipient_id: UUID) -> list[Message]:
+    return [
+        message
+        for message in store.messages.values()
+        if message.recipient_id == recipient_id and message.server_ack_received_at is None
+    ]
 
 
 def record_acknowledgment(

@@ -1,4 +1,4 @@
-use chat_rust::{protocol, state, terminal, transport};
+use chat_rust::{protocol, queue, state, terminal, transport};
 use state::{ClientState, ConnectionState, SessionState};
 use terminal::Command;
 
@@ -23,11 +23,35 @@ fn url() -> Result<String, &'static str> {
 fn reset(state: &mut ClientState, protocol: &mut protocol::ProtocolState) {
     state::disconnected(state);
     protocol.login_correlation = None;
-    protocol.send_correlation = None;
 }
 
-fn current_correlation(protocol: &protocol::ProtocolState) -> Option<uuid::Uuid> {
-    protocol.send_correlation.or(protocol.login_correlation)
+fn current_correlation(
+    state: &ClientState,
+    protocol: &protocol::ProtocolState,
+) -> Option<uuid::Uuid> {
+    queue::current_correlation(&state.outgoing_queue).or(protocol.login_correlation)
+}
+
+fn flush_messages(
+    state: &mut ClientState,
+    protocol: &mut protocol::ProtocolState,
+    display: &terminal::Display,
+) {
+    let (Some(user), Some(connection)) =
+        (state.authenticated_user.as_ref(), state.connection.as_mut())
+    else {
+        return;
+    };
+    if let Err((correlation, cause)) =
+        queue::flush_messages(&mut state.outgoing_queue, &user.name, connection)
+    {
+        display.error(
+            &format!("WebSocket send failed: {cause}. Use /connect to reconnect"),
+            Some(correlation),
+        );
+        reset(state, protocol);
+        display.output("Disconnected");
+    }
 }
 
 async fn close(
@@ -40,7 +64,7 @@ async fn close(
     }
 }
 
-async fn send(
+fn send(
     state: &mut ClientState,
     protocol: &mut protocol::ProtocolState,
     payload: String,
@@ -48,7 +72,7 @@ async fn send(
 ) {
     let correlation = protocol::correlation(&payload);
     if let Some(connection) = state.connection.as_mut()
-        && let Err(error) = transport::send(connection, payload).await
+        && let Err(error) = transport::send(connection, payload)
     {
         display.error(
             &format!("WebSocket send failed: {error}. Use /connect to reconnect"),
@@ -105,7 +129,7 @@ async fn main() {
                     Some(Err(error)) => {
                         display.error(
                             &format!("stdin read failed: {error}"),
-                            current_correlation(&protocol),
+                            current_correlation(&state, &protocol),
                         );
                         Command::Quit
                     }
@@ -135,7 +159,7 @@ async fn main() {
                             if graceful {
                                 closing.spawn(close(
                                     connection,
-                                    current_correlation(&protocol),
+                                    current_correlation(&state, &protocol),
                                     display.clone(),
                                 ));
                             } else {
@@ -146,30 +170,40 @@ async fn main() {
                         display.output("Disconnected");
                     }
                     Command::Send { recipient, text } => {
-                        if state.session_state != SessionState::LoggedIn {
+                        let sender = match state.session_state {
+                            SessionState::LoggedIn => state
+                                .authenticated_user
+                                .as_ref()
+                                .map(|user| user.name.clone()),
+                            _ if state.connection_state == ConnectionState::Disconnected => {
+                                state.remembered_username.clone()
+                            }
+                            _ => None,
+                        };
+                        let Some(sender) = sender else {
                             display.error(
                                 "Cannot use /send while logged out. Use /connect <username> first",
                                 None,
                             );
                             continue;
+                        };
+                        queue::enqueue(&mut state.outgoing_queue, sender, recipient, text);
+                        if state.session_state == SessionState::LoggedIn {
+                            flush_messages(&mut state, &mut protocol, &display);
+                        } else {
+                            display.output("✓ Queued locally");
                         }
-                        if protocol.send_correlation.is_some() {
-                            display.error(
-                                "Cannot use /send while a send is pending; wait for its response",
-                                protocol.send_correlation,
-                            );
-                            continue;
-                        }
-                        let (correlation, payload) = protocol::send(&recipient, &text);
-                        protocol.send_correlation = Some(correlation);
-                        send(&mut state, &mut protocol, payload, &display).await;
                     }
                     Command::Status => display.output(&terminal::status(&state)),
                     Command::Help => display.output(terminal::HELP),
                     Command::Quit => {
                         if let Some(connection) = state.connection.take() {
-                            close(connection, current_correlation(&protocol), display.clone())
-                                .await;
+                            close(
+                                connection,
+                                current_correlation(&state, &protocol),
+                                display.clone(),
+                            )
+                            .await;
                         }
                         while let Some(result) = closing.join_next().await {
                             if let Err(error) = result {
@@ -191,12 +225,12 @@ async fn main() {
                             protocol::login(state.login_username.as_deref().unwrap());
                         protocol.login_correlation = Some(correlation);
                         display.output("Connected; login pending");
-                        send(&mut state, &mut protocol, payload, &display).await;
+                        send(&mut state, &mut protocol, payload, &display);
                     }
                     Err(error) => {
                         display.error(
                             &format!("WebSocket connect failed: {error}"),
-                            current_correlation(&protocol),
+                            current_correlation(&state, &protocol),
                         );
                         reset(&mut state, &mut protocol);
                         display.output("Disconnected");
@@ -213,25 +247,36 @@ async fn main() {
                         display.output_for(&message, protocol::correlation(&text));
                     }
                     if let Some(acknowledgment) = effect.acknowledgment {
-                        send(&mut state, &mut protocol, acknowledgment, &display).await;
+                        send(&mut state, &mut protocol, acknowledgment, &display);
+                    }
+                    if effect.logged_in {
+                        flush_messages(&mut state, &mut protocol, &display);
                     }
                 }
                 Ok(transport::Event::Ping) => {
                     state.last_heartbeat_at = Some(chrono::Utc::now());
                     if let Some(connection) = state.connection.as_mut()
-                        && let Err(error) = transport::pong(connection).await
+                        && let Err(error) = transport::pong(connection)
                     {
                         display.error(
                             &format!("WebSocket pong failed: {error}. Use /connect to reconnect"),
-                            current_correlation(&protocol),
+                            current_correlation(&state, &protocol),
                         );
                         reset(&mut state, &mut protocol);
                         display.output("Disconnected");
                     }
                 }
                 Ok(transport::Event::Other) => {}
+                Ok(transport::Event::SendFailed(cause, correlation)) => {
+                    display.error(
+                        &format!("WebSocket send failed: {cause}. Use /connect to reconnect"),
+                        correlation,
+                    );
+                    reset(&mut state, &mut protocol);
+                    display.output("Disconnected");
+                }
                 Ok(transport::Event::Invalid(cause)) => {
-                    display.error(cause, current_correlation(&protocol))
+                    display.error(cause, current_correlation(&state, &protocol))
                 }
                 Ok(transport::Event::Closed) => {
                     display.output("Connection closed by server. Use /connect to reconnect");
@@ -241,7 +286,7 @@ async fn main() {
                 Err(error) => {
                     display.error(
                         &format!("WebSocket receive failed: {error}. Use /connect to reconnect"),
-                        current_correlation(&protocol),
+                        current_correlation(&state, &protocol),
                     );
                     reset(&mut state, &mut protocol);
                     display.output("Disconnected");

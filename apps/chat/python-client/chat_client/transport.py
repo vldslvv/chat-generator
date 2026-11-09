@@ -1,12 +1,13 @@
 """WebSocket I/O and graceful versus abrupt connection shutdown."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import UTC, datetime
 from uuid import UUID
 
 import aiohttp
 
 from .diagnostics import ReportedFailure, failure
+from .outgoing import outstanding_correlation
 from .protocol import Correlations, Request
 from .state import ClientState
 
@@ -25,7 +26,23 @@ async def send(socket: aiohttp.ClientWebSocketResponse, request: Request) -> Non
         raise ReportedFailure from error
 
 
-async def receive(state: ClientState, correlations: Correlations) -> AsyncIterator[str]:
+async def pong(
+    socket: aiohttp.ClientWebSocketResponse,
+    data: bytes,
+    correlation_id: UUID | None,
+) -> None:
+    try:
+        await socket.pong(data)
+    except (aiohttp.ClientError, OSError, TimeoutError) as error:
+        await failure("WebSocket pong failed", error, correlation_id)
+        raise ReportedFailure from error
+
+
+async def receive(
+    state: ClientState,
+    correlations: Correlations,
+    respond_to_ping: Callable[[bytes], Awaitable[None]],
+) -> AsyncIterator[str]:
     socket = state.connection
     assert socket is not None
     while True:
@@ -35,17 +52,13 @@ async def receive(state: ClientState, correlations: Correlations) -> AsyncIterat
             await failure(
                 "WebSocket receive failed",
                 error,
-                correlations.send or correlations.login,
+                outstanding_correlation(state) or correlations.login,
             )
             raise ReportedFailure from error
-        correlation = correlations.send or correlations.login
+        correlation = outstanding_correlation(state) or correlations.login
         if frame.type == aiohttp.WSMsgType.PING:
             state.last_heartbeat_at = datetime.now(UTC)
-            try:
-                await socket.pong(frame.data)
-            except (aiohttp.ClientError, OSError, TimeoutError) as error:
-                await failure("WebSocket pong failed", error, correlation)
-                raise ReportedFailure from error
+            await respond_to_ping(bytes(frame.data))
         elif frame.type == aiohttp.WSMsgType.TEXT:
             yield frame.data
         elif frame.type == aiohttp.WSMsgType.ERROR:
@@ -71,7 +84,7 @@ async def receive(state: ClientState, correlations: Correlations) -> AsyncIterat
                 await failure(
                     "WebSocket connection lost",
                     f"close code {code}; {cause}",
-                    correlations.send or correlations.login,
+                    correlation,
                 )
             return
         elif frame.type != aiohttp.WSMsgType.PONG:
