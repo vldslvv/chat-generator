@@ -83,6 +83,13 @@ impl Cli {
                 .unwrap()
                 .success()
         );
+        while let Some(line) = timeout(WAIT, self.errors.next_line())
+            .await
+            .unwrap()
+            .unwrap()
+        {
+            assert!(line.is_empty(), "Unexpected extra stderr output: {line}");
+        }
     }
 
     async fn diagnostic(&mut self, cause: &str, correlation: Option<&str>) -> String {
@@ -94,16 +101,22 @@ impl Cli {
                     .await
                     .unwrap()
                     .expect("stderr ended");
-                if line.contains(cause) {
+                if line.is_empty() {
+                    continue;
+                }
+                assert!(
+                    line.starts_with("✗ Error: ") && line.contains(cause),
+                    "{line}"
+                );
+                if let Some(correlation) = correlation {
                     assert!(
-                        line.contains(&format!(
-                            "correlation_id={}",
-                            correlation.unwrap_or("unavailable")
-                        )),
+                        line.contains(&format!("correlation_id={correlation}")),
                         "{line}"
                     );
-                    return line;
+                } else {
+                    assert!(!line.contains("correlation_id="), "{line}");
                 }
+                return line;
             }
         })
         .await
@@ -174,20 +187,26 @@ async fn local_commands_validate_and_stay_usable_without_connection() {
         "Server: ws://127.0.0.1:1/ws\nConnection: disconnected\nSession: none\nUser: -\n"
     ));
     cli.command("/connect").await;
-    cli.until("Username required: /connect <username>").await;
-    cli.diagnostic("Username required", None).await;
+    assert_eq!(
+        cli.diagnostic("Username required", None).await,
+        "✗ Error: Username required: /connect <username>"
+    );
     for command in ["/send", "/send bob", "/send bob    "] {
         cli.command(command).await;
-        cli.until("Usage: /send <recipient> <text>").await;
-        cli.diagnostic("Usage: /send <recipient> <text>", None)
+        let failure = cli
+            .diagnostic("Usage: /send <recipient> <text>", None)
             .await;
+        assert!(failure.contains(command), "{failure}");
     }
     cli.command("/send bob hello").await;
-    cli.until("Login required").await;
-    cli.diagnostic("Login required", None).await;
+    cli.diagnostic("Cannot use /send while logged out", None)
+        .await;
     cli.command("/unknown").await;
-    cli.until("Unknown command").await;
-    cli.diagnostic("Unknown command", None).await;
+    let failure = cli.diagnostic("Unknown or invalid command", None).await;
+    assert!(failure.contains("/unknown") && failure.contains("/help"));
+    cli.command("/login bob").await;
+    let hint = cli.diagnostic("Unknown command '/login'", None).await;
+    assert!(hint.contains("Use /connect <username>"));
     cli.command("/disconnect").await;
     cli.command("/drop-connection").await;
     cli.command("/help").await;
@@ -203,6 +222,11 @@ async fn local_commands_validate_and_stay_usable_without_connection() {
         assert!(cli.transcript.contains(syntax));
     }
     cli.quit().await;
+    assert!(
+        !cli.transcript.contains("✗ Error:")
+            && !cli.transcript.lines().any(|line| line.starts_with("> "))
+    );
+    assert!(cli.transcript.contains("Last heartbeat: never\n\n"));
 }
 
 #[tokio::test]
@@ -241,7 +265,7 @@ async fn commands_remain_responsive_during_handshake_and_attempt_can_be_cancelle
         0
     );
     cli.command("/connect").await;
-    cli.until("Username required").await;
+    cli.diagnostic("Username required", None).await;
     drop(listener);
     cli.command("/connect alice").await;
     cli.until("Disconnected").await;
@@ -283,7 +307,8 @@ async fn pending_login_correlation_heartbeat_and_rejection_preserve_local_lifecy
     );
     cli.command("/connect another").await;
     cli.command("/send bob blocked").await;
-    cli.until("Login required").await;
+    cli.diagnostic("Cannot use /send while logged out", None)
+        .await;
     cli.command("/status").await;
     let heartbeat = cli.until("Last heartbeat:").await;
     let time =
@@ -299,7 +324,6 @@ async fn pending_login_correlation_heartbeat_and_rejection_preserve_local_lifecy
         "data":{"message":"Name rejected"}}),
     )
     .await;
-    cli.until("✗ Error: Name rejected").await;
     cli.diagnostic("Name rejected", login["correlation_id"].as_str())
         .await;
     cli.command("/status").await;
@@ -313,7 +337,7 @@ async fn pending_login_correlation_heartbeat_and_rejection_preserve_local_lifecy
     peer.flush().await.unwrap();
     cli.until("Disconnected").await;
     cli.command("/connect").await;
-    cli.until("Username required").await;
+    cli.diagnostic("Username required", None).await;
     cli.quit().await;
 }
 
@@ -338,8 +362,7 @@ async fn messages_acknowledge_after_display_and_disconnect_remembers_only_succes
     cli.diagnostic("mismatched correlation ID", Some(&wrong_correlation))
         .await;
     cli.command("/send bob overlapping").await;
-    cli.until("A send is pending").await;
-    cli.diagnostic("A send is pending", sent["correlation_id"].as_str())
+    cli.diagnostic("a send is pending", sent["correlation_id"].as_str())
         .await;
     reply(&mut peer, json!({"type":"message_accepted", "correlation_id":sent["correlation_id"], "data":message(id,"  hello  world  ")})).await;
     cli.until(&format!("✓ Accepted {id}")).await;
@@ -351,7 +374,6 @@ async fn messages_acknowledge_after_display_and_disconnect_remembers_only_succes
     let rejected = request(&mut peer, "send").await;
     assert_ne!(rejected["correlation_id"], sent["correlation_id"]);
     reply(&mut peer, json!({"type":"error", "correlation_id":rejected["correlation_id"], "data":{"message":"Recipient is offline"}})).await;
-    cli.until("✗ Error: Recipient is offline").await;
     cli.diagnostic("Recipient is offline", rejected["correlation_id"].as_str())
         .await;
     cli.command("/send bob after error").await;
@@ -362,11 +384,16 @@ async fn messages_acknowledge_after_display_and_disconnect_remembers_only_succes
     let incoming = Uuid::new_v4();
     reply(
         &mut peer,
-        json!({"type":"message_received", "data":message(incoming,"incoming  text")}),
+        json!({"type":"message_received", "data":{
+            "sender_name":"bob", "id":incoming,
+            "sender_id":Uuid::new_v4(), "recipient_id":Uuid::new_v4(),
+            "text":"  incoming  text  ", "client_sent_at":0,
+            "server_received_at":"2026-11-08T12:00:00Z",
+            "recipient_received_at":null, "server_ack_received_at":null}}),
     )
     .await;
     let ack = request(&mut peer, "ack").await;
-    cli.until(": incoming  text").await;
+    assert_eq!(cli.until("← bob:").await, "← bob:   incoming  text  ");
     assert_eq!(ack["data"]["message_id"], incoming.to_string());
     assert_ne!(ack["correlation_id"], sent["correlation_id"]);
     let received_at =
@@ -396,7 +423,8 @@ async fn messages_acknowledge_after_display_and_disconnect_remembers_only_succes
             .is_none_or(|frame| frame.is_err())
     );
     cli.command("/send bob no queue").await;
-    cli.until("Login required").await;
+    cli.diagnostic("Cannot use /send while logged out", None)
+        .await;
     cli.command("/status").await;
     assert_eq!(cli.until("Last heartbeat:").await, heartbeat);
     assert!(
@@ -443,6 +471,7 @@ async fn server_connection_loss_resets_authentication_without_reconnecting() {
         )
         .await;
     assert!(failure.contains("without closing handshake"));
+    assert!(failure.contains("Use /connect to reconnect"));
     cli.command("/status").await;
     cli.until("Last heartbeat: never").await;
     assert!(
@@ -479,7 +508,6 @@ async fn malformed_server_event_logs_recoverable_correlation_and_keeps_connectio
         .diagnostic("Invalid server event", login["correlation_id"].as_str())
         .await;
     assert!(diagnostic.contains("UUID") || diagnostic.contains("invalid character"));
-    cli.until("✗ Error: Invalid server event").await;
     peer.send(Message::Text("not json".into())).await.unwrap();
     cli.diagnostic("Invalid server event", None).await;
     peer.send(Message::Binary(vec![1, 2, 3].into()))
@@ -554,7 +582,7 @@ async fn stdio_read_and_write_failures_report_the_operating_error() {
     assert!(
         stderr.contains("stdin read failed")
             && stderr.contains("UTF-8")
-            && stderr.contains("correlation_id=unavailable"),
+            && stderr.starts_with("✗ Error: "),
         "{stderr}"
     );
 
@@ -582,7 +610,206 @@ async fn stdio_read_and_write_failures_report_the_operating_error() {
     assert!(
         stderr.contains("stdout write failed")
             && stderr.contains("Broken pipe")
-            && stderr.contains("correlation_id=unavailable"),
+            && stderr.starts_with("✗ Error: "),
         "{stderr}"
     );
+}
+
+#[cfg(unix)]
+struct PtyCli {
+    child: Box<dyn portable_pty::Child + Send + Sync>,
+    master: Box<dyn portable_pty::MasterPty + Send>,
+    initial_local_flags: u64,
+    input: Box<dyn std::io::Write + Send>,
+    output: tokio::sync::mpsc::UnboundedReceiver<Vec<u8>>,
+    screen: vt100::Parser,
+}
+
+#[cfg(unix)]
+impl PtyCli {
+    fn start(url: &str) -> Self {
+        let pair = portable_pty::native_pty_system()
+            .openpty(portable_pty::PtySize {
+                rows: 48,
+                cols: 100,
+                pixel_width: 0,
+                pixel_height: 0,
+            })
+            .unwrap();
+        let initial_local_flags = pair.master.get_termios().unwrap().local_flags.bits() as u64;
+        let mut command = portable_pty::CommandBuilder::new(env!("CARGO_BIN_EXE_chat-rust"));
+        command.args(["--url", url]);
+        command.env("TERM", "xterm-256color");
+        let child = pair.slave.spawn_command(command).unwrap();
+        drop(pair.slave);
+        let mut reader = pair.master.try_clone_reader().unwrap();
+        let input = pair.master.take_writer().unwrap();
+        let (sender, output) = tokio::sync::mpsc::unbounded_channel();
+        std::thread::spawn(move || {
+            let mut bytes = [0; 4096];
+            while let Ok(length) = reader.read(&mut bytes) {
+                if length == 0 || sender.send(bytes[..length].to_vec()).is_err() {
+                    break;
+                }
+            }
+        });
+        Self {
+            child,
+            master: pair.master,
+            initial_local_flags,
+            input,
+            output,
+            screen: vt100::Parser::new(48.try_into().unwrap(), 100.try_into().unwrap(), 0),
+        }
+    }
+
+    fn type_text(&mut self, text: &str) {
+        self.input.write_all(text.as_bytes()).unwrap();
+        self.input.flush().unwrap();
+    }
+
+    async fn until(&mut self, expected: &str) {
+        timeout(WAIT, async {
+            while !self.screen.screen().contents().contains(expected) {
+                let bytes = self.output.recv().await.expect("PTY output ended");
+                self.screen.process(&bytes);
+            }
+        })
+        .await
+        .unwrap_or_else(|_| {
+            panic!(
+                "Missing {expected:?}; screen:\n{}",
+                self.screen.screen().contents()
+            )
+        });
+    }
+}
+
+#[cfg(unix)]
+impl Drop for PtyCli {
+    fn drop(&mut self) {
+        if self.child.try_wait().unwrap().is_none() {
+            self.child.kill().unwrap();
+            self.child.wait().unwrap();
+        }
+    }
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn real_terminal_preserves_unicode_input_cursor_and_completed_blocks_during_events() {
+    let (listener, url) = listener().await;
+    let mut cli = PtyCli::start(&url);
+    cli.until("Chat ready. Use /help for commands.\n\n>").await;
+    cli.type_text("/connect alice\r");
+    let mut peer = accept(&listener).await;
+    let login = request(&mut peer, "login").await;
+    reply(
+        &mut peer,
+        json!({"type":"login_ok", "correlation_id":login["correlation_id"],
+        "data":{"id":Uuid::new_v4(), "name":"alice"}}),
+    )
+    .await;
+    cli.until("✓ Logged in as alice\n\n>").await;
+
+    cli.type_text("/send alice héllo界TAIL\x1b[D\x1b[D\x1b[D\x1b[D");
+    cli.until("> /send alice héllo界TAIL").await;
+    let cursor_column = "> /send alice héllo界".chars().count() as u16 + 1;
+    timeout(WAIT, async {
+        while cli.screen.screen().cursor_position().1 != cursor_column {
+            cli.screen.process(&cli.output.recv().await.unwrap());
+        }
+    })
+    .await
+    .unwrap();
+    let cursor_row = cli.screen.screen().cursor_position().0;
+    let completed = cli
+        .screen
+        .screen()
+        .contents()
+        .lines()
+        .take(cursor_row.into())
+        .collect::<Vec<_>>()
+        .join("\n");
+    let id = Uuid::new_v4();
+    let mut received = message(id, " bonjour  世界 ");
+    received["sender_name"] = json!("bob");
+    reply(
+        &mut peer,
+        json!({"type":"message_received", "data":received}),
+    )
+    .await;
+    let _ = request(&mut peer, "ack").await;
+    cli.until("← bob:  bonjour  世界 \n\n> /send alice héllo界TAIL")
+        .await;
+    assert_eq!(
+        cli.screen.screen().cursor_position(),
+        (cursor_row + 2, cursor_column)
+    );
+    assert!(cli.screen.screen().contents().starts_with(&completed));
+    cli.type_text("X\r");
+    let sent = request(&mut peer, "send").await;
+    assert_eq!(sent["data"]["text"], "héllo界XTAIL");
+
+    // Self delivery can precede acceptance and must preserve the active editor.
+    let mut own = message(Uuid::new_v4(), "héllo界XTAIL");
+    own["sender_name"] = json!("alice");
+    reply(&mut peer, json!({"type":"message_received", "data":own})).await;
+    let _ = request(&mut peer, "ack").await;
+    cli.until("← alice: héllo界XTAIL\n\n>").await;
+    reply(
+        &mut peer,
+        json!({"type":"message_accepted", "correlation_id":sent["correlation_id"],
+        "data":message(Uuid::new_v4(), "héllo界XTAIL")}),
+    )
+    .await;
+    cli.until("✓ Accepted").await;
+    while let Ok(bytes) = cli.output.try_recv() {
+        cli.screen.process(&bytes);
+    }
+    peer.send(Message::Ping(b"silent".to_vec().into()))
+        .await
+        .unwrap();
+    assert_eq!(
+        frame(&mut peer).await,
+        Message::Pong(b"silent".to_vec().into())
+    );
+    assert!(
+        timeout(Duration::from_millis(100), cli.output.recv())
+            .await
+            .is_err()
+    );
+
+    cli.type_text("/status\r");
+    cli.until("Connection: connected\nSession: logged in\nUser: alice\nLast heartbeat:")
+        .await;
+    cli.type_text("/login alice\r");
+    cli.until("✗ Error: Unknown command '/login'. Use /connect <username>.\n\n>")
+        .await;
+    let screen = cli.screen.screen().contents();
+    assert_eq!(screen.matches("✗ Error: Unknown command").count(), 1);
+    assert!(screen.contains("Last heartbeat:") && !screen.contains("Last heartbeat: never"));
+    drop(peer);
+    cli.until("Use /connect to reconnect").await;
+    cli.type_text("/status\r");
+    cli.until("Connection: disconnected\nSession: none\nUser: -\nLast heartbeat:")
+        .await;
+    println!(
+        "PTY screen after events, cursor restoration, heartbeat, and loss:\n{}",
+        cli.screen.screen().contents()
+    );
+    cli.type_text("/quit\r");
+    timeout(WAIT, async {
+        loop {
+            if let Some(status) = cli.child.try_wait().unwrap() {
+                assert!(status.success());
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    })
+    .await
+    .unwrap();
+    let restored = cli.master.get_termios().unwrap();
+    assert_eq!(restored.local_flags.bits() as u64, cli.initial_local_flags);
 }

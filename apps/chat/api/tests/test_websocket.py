@@ -19,6 +19,7 @@ def test_message_and_silent_acknowledgments(clients):
         client_sent_at="2026-11-08T12:00:00Z",
         server_received_at="1900-01-01T00:00:00Z",
         sender_id=recipient["id"],
+        sender_name="forged",
     )
     UUID(message["id"])
     assert message["sender_id"] == sender["id"]
@@ -100,7 +101,7 @@ def test_name_boundary_and_repeated_login(clients):
             "data": {"message": "Invalid request"},
         }
     login(bob, "bob")
-    assert sent_message(alice, bob)["sender_id"] == first["id"]
+    assert sent_message(alice, bob, expected_sender="x" * 32)["sender_id"] == first["id"]
 
 
 @pytest.mark.parametrize(
@@ -208,7 +209,10 @@ def test_new_server_discards_users_and_messages():
         request(client, "send", {"recipient": "alice", "text": "self"})
         incoming = receive(client)
         assert incoming["type"] == "message_received"
-        assert receive(client)["type"] == "message_accepted"
+        accepted = receive(client)
+        assert accepted["type"] == "message_accepted"
+        assert "sender_name" not in accepted["data"]
+        assert incoming["data"] == {**accepted["data"], "sender_name": "alice"}
     with running_server() as (url, _), connect(url) as client:
         assert login(client, "alice")["id"] != original_user["id"]
         request(client, "ack", {"message_id": incoming["data"]["id"]})

@@ -67,6 +67,12 @@ Use `/help` to list commands and `/quit` to exit.
 Both clients keep accepting terminal commands after connection loss.
 Messages are delivered only to users currently online; clients do not retry or reconnect automatically.
 
+Interactive terminals show a `> ` prompt and preserve unfinished input when a
+message arrives. Incoming messages appear as `← alice: Hello`, using the sender's
+authenticated name and preserving message spacing. Command results and incoming
+events are separated by blank lines. Errors appear once on stderr with an
+actionable description and the request correlation ID when available.
+
 ## Container
 
 Build and run from `apps/chat/api`:

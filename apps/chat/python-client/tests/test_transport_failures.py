@@ -14,6 +14,7 @@ from uuid import UUID, uuid4
 import aiohttp
 from chat_client import protocol, transport
 from chat_client.state import ClientState
+from chat_client.diagnostics import ReportedFailure
 
 async def main():
     url, mode, identifier = sys.argv[1:]
@@ -41,7 +42,7 @@ async def main():
                 correlations = protocol.Correlations(login=correlation)
                 async for _ in transport.receive(state, correlations):
                     pass
-        except (aiohttp.ClientError, OSError):
+        except (aiohttp.ClientError, OSError, ReportedFailure):
             pass
         finally:
             await socket.close()
@@ -55,7 +56,7 @@ asyncio.run(main())
     [
         ("send", "ack send failed", "Cannot write"),
         ("pong", "WebSocket pong failed", "Cannot write"),
-        ("close", "WebSocket close failed", "TimeoutError"),
+        ("close", "WebSocket close failed", "operation timed out"),
     ],
 )
 async def test_transport_failure_logs_cause_and_actual_request_id(

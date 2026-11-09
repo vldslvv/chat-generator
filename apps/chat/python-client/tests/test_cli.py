@@ -55,6 +55,7 @@ class Terminal:
                 raw = await self.process.stdout.readline()
                 assert raw, f"Client exited before {expected!r}; output={lines}"
                 line = raw.decode().rstrip("\n")
+                assert "✗ Error:" not in line, "Errors belong on stderr only"
                 lines.append(line)
                 if expected in line:
                     return "\n".join(lines)
@@ -65,7 +66,7 @@ class Terminal:
 
 
 @asynccontextmanager
-async def client(url):
+async def client(url, *, eof=False):
     process = await asyncio.create_subprocess_exec(
         sys.executable,
         "-m",
@@ -81,7 +82,10 @@ async def client(url):
     try:
         await cli.until("Chat client ready")
         yield cli
-        await cli.command("/quit")
+        if eof:
+            process.stdin.close()
+        else:
+            await cli.command("/quit")
         async with asyncio.timeout(4):
             assert await process.wait() == 0
         await error_task
@@ -132,16 +136,17 @@ async def test_cli_protocol_heartbeat_and_reconnection():
         assert "Connection: disconnected\nSession: none\nUser: -" in status
         assert "Last heartbeat: never" in status
         await cli.command("/connect")
-        await cli.until("Username required: /connect <username>")
         await cli.error_until("Username required: /connect <username>")
         await cli.command("/send bob hello")
-        await cli.until("Login required")
         await cli.error_until("Login required")
         await cli.command("/bogus")
-        await cli.until("Unknown command")
-        await cli.error_until("Unknown command")
+        assert "'/bogus'. Use /help." in await cli.error_until("Unknown command")
+        await cli.command("/login bob")
+        assert (
+            "Unknown command '/login'. Use /connect <username>."
+            in await cli.error_until("Unknown command")
+        )
         await cli.command("/send bob")
-        await cli.until("Usage: /send <recipient> <text>")
         await cli.error_until("Usage: /send <recipient> <text>")
         await cli.command("/help")
         help_text = await cli.until("/quit")
@@ -167,13 +172,11 @@ async def test_cli_protocol_heartbeat_and_reconnection():
         assert send["data"]["text"] == "hello  there  "
         assert datetime.fromisoformat(send["data"]["client_sent_at"]).tzinfo is not None
         await cli.command("/send bob overlapping")
-        await cli.until("Send in progress")
         assert send["correlation_id"] in await cli.error_until("Send in progress")
         assert "✓ Accepted" not in await cli.status()
         message = message_data()
         wrong = {"correlation_id": str(uuid4())}
         await ws.send_json(reply("message_accepted", wrong, message))
-        await cli.until("Unexpected send reply")
         assert wrong["correlation_id"] in await cli.error_until("Unexpected send reply")
         await ws.send_json(reply("message_accepted", send, message))
         await cli.until(f"✓ Accepted {message['id']}")
@@ -181,12 +184,13 @@ async def test_cli_protocol_heartbeat_and_reconnection():
         await cli.command("/send offline no retry")
         failed = await next_item(requests)
         await ws.send_json(reply("error", failed, {"message": "Recipient is offline"}))
-        await cli.until("✗ Error: Recipient is offline")
         assert failed["correlation_id"] in await cli.error_until("Recipient is offline")
 
         before_receive = datetime.now(UTC)
-        await ws.send_json({"type": "message_received", "data": message})
-        await cli.until("Hi Bob")
+        await ws.send_json(
+            {"type": "message_received", "data": {**message, "sender_name": "bob"}}
+        )
+        await cli.until("← bob: Hi Bob")
         ack = await next_item(requests)
         assert ack["type"] == "ack"
         assert ack["data"]["message_id"] == message["id"]
@@ -214,7 +218,6 @@ async def test_cli_protocol_heartbeat_and_reconnection():
         fresh = await next_item(requests)
         assert fresh["data"]["text"] == "fresh after reconnect"
         await ws.send_json(reply("error", fresh, {"message": "Recipient is offline"}))
-        await cli.until("✗ Error: Recipient is offline")
         assert fresh["correlation_id"] in await cli.error_until("Recipient is offline")
         await cli.command("/disconnect")
         await cli.until("Disconnected")
@@ -302,49 +305,63 @@ async def test_login_error_and_connection_failure_leave_terminal_usable():
 
     async with server(handler) as url, client(url) as cli:
         await cli.command("/connect alice")
-        await cli.until("✗ Error: Name already online")
-        assert login_ids[-1] in await cli.error_until("Name already online")
+        diagnostic = await cli.error_until("Name already online")
+        assert login_ids[-1] in diagnostic
         status = await cli.status()
         assert "Connection: connected\nSession: none\nUser: -" in status
         await cli.command("/disconnect")
         await cli.until("Disconnected")
         await cli.command("/connect")
-        await cli.until("Username required")
+        await cli.error_until("Username required")
 
     async with client("http://127.0.0.1:1/ws") as cli:
         await cli.command("/connect alice")
-        await cli.until("Connection failed")
         assert "Cannot connect" in await cli.error_until("Connection failed")
         await cli.until("Disconnected")
         assert "Connection: disconnected\nSession: none\nUser: -" in await cli.status()
         await cli.command("/connect")
-        await cli.until("Username required")
+        await cli.error_until("Username required")
 
 
-async def test_login_pending_status_and_quit_close_active_connection():
+@pytest.mark.parametrize("exit_mode", ["quit", "eof"])
+async def test_session_status_and_terminal_exit_close_active_connection(exit_mode):
     logins = asyncio.Queue()
     closures = asyncio.Queue()
 
     async def handler(request):
         ws = web.WebSocketResponse()
         await ws.prepare(request)
-        await logins.put(await ws.receive_json())
+        await logins.put((ws, await ws.receive_json()))
         async for _ in ws:
             pass
         await closures.put(ws.close_code)
         return ws
 
     async with server(handler) as url:
-        async with client(url) as cli:
+        async with client(url, eof=exit_mode == "eof") as cli:
             await cli.command("/connect alice")
-            assert (await next_item(logins))["data"]["name"] == "alice"
+            ws, login = await next_item(logins)
+            assert login["data"]["name"] == "alice"
+            if exit_mode == "eof":
+                await ws.send_json(
+                    reply("login_ok", login, {"id": str(uuid4()), "name": "alice"})
+                )
+                await cli.until("Logged in as alice")
             status = await cli.status()
-            assert "Connection: connected\nSession: login pending\nUser: -" in status
+            session = (
+                "Session: logged in\nUser: alice"
+                if exit_mode == "eof"
+                else "Session: login pending\nUser: -"
+            )
+            assert "Connection: connected\n" + session in status
             await cli.command("/connect bob")
-            await cli.command("/send bob before login")
-            await cli.until("Login required")
+            if exit_mode == "quit":
+                await cli.command("/send bob before login")
+                await cli.error_until("Login required")
             assert logins.empty()
         assert await next_item(closures) == 1000
+        if exit_mode == "eof":
+            assert not cli.diagnostics
 
 
 async def test_malformed_events_log_recoverable_correlation_without_payload():
@@ -365,12 +382,10 @@ async def test_malformed_events_log_recoverable_correlation_without_payload():
         ws = await next_item(sockets)
         login = await next_item(logins)
         await ws.send_str("{invalid json")
-        await cli.until("Invalid server event")
         assert "Invalid JSON" in await cli.error_until("Invalid server event")
         await ws.send_json(
             reply("login_ok", login, {"id": "private-invalid-payload", "name": "alice"})
         )
-        await cli.until("Invalid server event")
         diagnostic = await cli.error_until("Invalid server event")
         assert login["correlation_id"] in diagnostic
         assert "UUID" in diagnostic
@@ -419,6 +434,7 @@ async def test_network_failures_log_cause_and_outstanding_correlation(mode, caus
         assert send["correlation_id"] in diagnostic
         assert "Connection: disconnected\nSession: none\nUser: -" in await cli.status()
         assert sends.empty()
+        assert sum("✗ Error:" in line for line in cli.diagnostics) == 1
 
 
 @pytest.mark.parametrize("broken_stream", ["stdin", "stdout"])
@@ -444,9 +460,62 @@ async def test_terminal_operational_failure_is_reported_on_stderr(broken_stream)
     async with asyncio.timeout(4):
         stdout, stderr = await process.communicate()
     assert process.returncode != 0
-    assert f"Terminal {('input' if broken_stream == 'stdin' else 'output')} failed" in (
-        stderr.decode()
+    diagnostic = stderr.decode()
+    assert diagnostic.count("✗ Error:") == 1
+    assert "Terminal operation failed" in diagnostic
+    assert ("decode byte" if broken_stream == "stdin" else "Broken pipe") in diagnostic
+    assert "UnicodeDecodeError" not in diagnostic
+    assert "BrokenPipeError" not in diagnostic
+
+
+@pytest.mark.parametrize("output_block", ["login", "disconnect"])
+async def test_connection_output_failure_preserves_correlation_and_reports_once(
+    output_block,
+):
+    logins = asyncio.Queue()
+    sends = asyncio.Queue()
+
+    async def handler(request):
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+        login = await ws.receive_json()
+        await logins.put((ws, login))
+        async for frame in ws:
+            await sends.put(frame.json())
+        return ws
+
+    async with server(handler) as url, client(url) as cli:
+        await cli.command("/connect alice")
+        ws, login = await next_item(logins)
+        outstanding = login
+        if output_block == "disconnect":
+            await ws.send_json(
+                reply("login_ok", login, {"id": str(uuid4()), "name": "alice"})
+            )
+            await cli.until("Logged in as alice")
+            await cli.command("/send bob interrupted")
+            outstanding = await next_item(sends)
+        cli.process.stdout._transport.close()
+        if output_block == "login":
+            await ws.send_json(
+                reply("login_ok", login, {"id": str(uuid4()), "name": "alice"})
+            )
+        else:
+            await ws.close()
+        diagnostic = await cli.error_until("Terminal output failed")
+        assert outstanding["correlation_id"] in diagnostic
+        assert "Broken pipe" in diagnostic
+        assert "BrokenPipeError" not in diagnostic
+        await cli.command("/help")
+        if output_block == "disconnect":
+            await cli.command("/connect")
+            ws, login = await next_item(logins)
+            assert login["data"]["name"] == "alice"
+            await ws.send_json(
+                reply("login_ok", login, {"id": str(uuid4()), "name": "alice"})
+            )
+    assert sum("Terminal output failed" in line for line in cli.diagnostics) == 1
+    assert sum("✗ Error:" in line for line in cli.diagnostics) == (
+        1 if output_block == "login" else 2
     )
-    assert (
-        "UnicodeDecodeError" if broken_stream == "stdin" else "BrokenPipeError"
-    ) in (stderr.decode())
+    assert not any("never retrieved" in line for line in cli.diagnostics)

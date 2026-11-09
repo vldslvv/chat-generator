@@ -30,20 +30,32 @@ fn current_correlation(protocol: &protocol::ProtocolState) -> Option<uuid::Uuid>
     protocol.send_correlation.or(protocol.login_correlation)
 }
 
-async fn close(connection: transport::Connection, correlation: Option<uuid::Uuid>) {
+async fn close(
+    connection: transport::Connection,
+    correlation: Option<uuid::Uuid>,
+    display: terminal::Display,
+) {
     if let Err(error) = transport::close(connection).await {
-        terminal::diagnostic(&error, correlation);
+        display.error(&error, correlation);
     }
 }
 
-async fn send(state: &mut ClientState, protocol: &mut protocol::ProtocolState, payload: String) {
+async fn send(
+    state: &mut ClientState,
+    protocol: &mut protocol::ProtocolState,
+    payload: String,
+    display: &terminal::Display,
+) {
     let correlation = protocol::correlation(&payload);
     if let Some(connection) = state.connection.as_mut()
         && let Err(error) = transport::send(connection, payload).await
     {
-        terminal::error(&format!("WebSocket send failed: {error}"), correlation);
+        display.error(
+            &format!("WebSocket send failed: {error}. Use /connect to reconnect"),
+            correlation,
+        );
         reset(state, protocol);
-        terminal::output("Disconnected");
+        display.output("Disconnected");
     }
 }
 
@@ -52,16 +64,22 @@ async fn main() {
     let server_url = match url() {
         Ok(url) => url,
         Err(error) => {
-            eprintln!("{error}");
+            eprintln!("✗ Error: {error}");
             std::process::exit(2);
         }
     };
     let mut state = state::initial(server_url);
     let mut protocol = protocol::ProtocolState::default();
     let mut attempt = None;
-    let mut input = terminal::input();
+    let (display, mut input) = match terminal::open() {
+        Ok(terminal) => terminal,
+        Err(error) => {
+            eprintln!("✗ Error: Terminal setup failed: {error}");
+            std::process::exit(1);
+        }
+    };
     let mut closing = tokio::task::JoinSet::new();
-    terminal::output("Chat ready. Use /help for commands.");
+    display.output("Chat ready. Use /help for commands.");
 
     loop {
         let action = tokio::select! {
@@ -71,7 +89,7 @@ async fn main() {
         };
         while let Some(result) = closing.try_join_next() {
             if let Err(error) = result {
-                terminal::diagnostic(&format!("Close task failed: {error}"), None);
+                display.error(&format!("Close task failed: {error}"), None);
             }
         }
         match action {
@@ -80,12 +98,12 @@ async fn main() {
                     Some(Ok(line)) => match terminal::parse(&line) {
                         Ok(command) => command,
                         Err(error) => {
-                            terminal::error(error, None);
+                            display.error(&error, None);
                             continue;
                         }
                     },
                     Some(Err(error)) => {
-                        terminal::diagnostic(
+                        display.error(
                             &format!("stdin read failed: {error}"),
                             current_correlation(&protocol),
                         );
@@ -99,14 +117,13 @@ async fn main() {
                             continue;
                         }
                         let Some(name) = name.or_else(|| state.remembered_username.clone()) else {
-                            terminal::diagnostic("Username required: /connect <username>", None);
-                            terminal::output("Username required: /connect <username>");
+                            display.error("Username required: /connect <username>", None);
                             continue;
                         };
                         state.login_username = Some(name);
                         state.connection_state = ConnectionState::Connecting;
                         attempt = Some(transport::connect(state.server_url.clone()));
-                        terminal::output("Connecting");
+                        display.output("Connecting");
                     }
                     Command::Disconnect | Command::DropConnection => {
                         let graceful = matches!(command, Command::Disconnect);
@@ -116,39 +133,47 @@ async fn main() {
                         attempt = None;
                         if let Some(connection) = state.connection.take() {
                             if graceful {
-                                closing.spawn(close(connection, current_correlation(&protocol)));
+                                closing.spawn(close(
+                                    connection,
+                                    current_correlation(&protocol),
+                                    display.clone(),
+                                ));
                             } else {
                                 transport::drop_connection(connection);
                             }
                         }
                         reset(&mut state, &mut protocol);
-                        terminal::output("Disconnected");
+                        display.output("Disconnected");
                     }
                     Command::Send { recipient, text } => {
                         if state.session_state != SessionState::LoggedIn {
-                            terminal::error("Login required before /send", None);
+                            display.error(
+                                "Cannot use /send while logged out. Use /connect <username> first",
+                                None,
+                            );
                             continue;
                         }
                         if protocol.send_correlation.is_some() {
-                            terminal::error(
-                                "A send is pending; wait for its response",
+                            display.error(
+                                "Cannot use /send while a send is pending; wait for its response",
                                 protocol.send_correlation,
                             );
                             continue;
                         }
                         let (correlation, payload) = protocol::send(&recipient, &text);
                         protocol.send_correlation = Some(correlation);
-                        send(&mut state, &mut protocol, payload).await;
+                        send(&mut state, &mut protocol, payload, &display).await;
                     }
-                    Command::Status => terminal::output(&terminal::status(&state)),
-                    Command::Help => terminal::output(terminal::HELP),
+                    Command::Status => display.output(&terminal::status(&state)),
+                    Command::Help => display.output(terminal::HELP),
                     Command::Quit => {
                         if let Some(connection) = state.connection.take() {
-                            close(connection, current_correlation(&protocol)).await;
+                            close(connection, current_correlation(&protocol), display.clone())
+                                .await;
                         }
                         while let Some(result) = closing.join_next().await {
                             if let Err(error) = result {
-                                terminal::diagnostic(&format!("Close task failed: {error}"), None);
+                                display.error(&format!("Close task failed: {error}"), None);
                             }
                         }
                         break;
@@ -165,16 +190,16 @@ async fn main() {
                         let (correlation, payload) =
                             protocol::login(state.login_username.as_deref().unwrap());
                         protocol.login_correlation = Some(correlation);
-                        terminal::output("Connected; login pending");
-                        send(&mut state, &mut protocol, payload).await;
+                        display.output("Connected; login pending");
+                        send(&mut state, &mut protocol, payload, &display).await;
                     }
                     Err(error) => {
-                        terminal::error(
+                        display.error(
                             &format!("WebSocket connect failed: {error}"),
                             current_correlation(&protocol),
                         );
                         reset(&mut state, &mut protocol);
-                        terminal::output("Disconnected");
+                        display.output("Disconnected");
                     }
                 }
             }
@@ -182,13 +207,13 @@ async fn main() {
                 Ok(transport::Event::Text(text)) => {
                     let effect = protocol::handle(&mut state, &mut protocol, &text);
                     if let Some((cause, correlation)) = effect.diagnostic {
-                        terminal::diagnostic(&cause, correlation);
+                        display.error(&cause, correlation);
                     }
-                    if let Some(display) = effect.display {
-                        terminal::output_for(&display, protocol::correlation(&text));
+                    if let Some(message) = effect.display {
+                        display.output_for(&message, protocol::correlation(&text));
                     }
                     if let Some(acknowledgment) = effect.acknowledgment {
-                        send(&mut state, &mut protocol, acknowledgment).await;
+                        send(&mut state, &mut protocol, acknowledgment, &display).await;
                     }
                 }
                 Ok(transport::Event::Ping) => {
@@ -196,29 +221,30 @@ async fn main() {
                     if let Some(connection) = state.connection.as_mut()
                         && let Err(error) = transport::pong(connection).await
                     {
-                        terminal::error(
-                            &format!("WebSocket pong failed: {error}"),
+                        display.error(
+                            &format!("WebSocket pong failed: {error}. Use /connect to reconnect"),
                             current_correlation(&protocol),
                         );
                         reset(&mut state, &mut protocol);
-                        terminal::output("Disconnected");
+                        display.output("Disconnected");
                     }
                 }
                 Ok(transport::Event::Other) => {}
                 Ok(transport::Event::Invalid(cause)) => {
-                    terminal::diagnostic(cause, current_correlation(&protocol))
+                    display.error(cause, current_correlation(&protocol))
                 }
                 Ok(transport::Event::Closed) => {
+                    display.output("Connection closed by server. Use /connect to reconnect");
                     reset(&mut state, &mut protocol);
-                    terminal::output("Disconnected");
+                    display.output("Disconnected");
                 }
                 Err(error) => {
-                    terminal::diagnostic(
-                        &format!("WebSocket receive failed: {error}"),
+                    display.error(
+                        &format!("WebSocket receive failed: {error}. Use /connect to reconnect"),
                         current_correlation(&protocol),
                     );
                     reset(&mut state, &mut protocol);
-                    terminal::output("Disconnected");
+                    display.output("Disconnected");
                 }
             },
         }

@@ -21,10 +21,14 @@ def login(client, name):
     return reply["data"]
 
 
-def sent_message(alice, bob, **extra):
+def sent_message(alice, bob, *, expected_sender="alice", **extra):
     correlation = request(alice, "send", {"recipient": "bob", "text": "hello 🌎", **extra})
     accepted, incoming = receive(alice), receive(bob)
     assert accepted["type"] == "message_accepted"
     assert accepted["correlation_id"] == correlation
-    assert incoming == {"type": "message_received", "data": accepted["data"]}
+    assert "sender_name" not in accepted["data"]
+    assert incoming == {
+        "type": "message_received",
+        "data": {**accepted["data"], "sender_name": expected_sender},
+    }
     return accepted["data"]

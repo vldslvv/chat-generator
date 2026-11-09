@@ -43,7 +43,8 @@ async def handle(
             received_at,
         )
         data = jsonable_encoder(asdict(message))
-        await deliver(active, recipient.id, event("message_received", data), correlation)
+        notification = event("message_received", {**data, "sender_name": actor.name})
+        await deliver(active, recipient.id, notification, correlation)
         return event("message_accepted", data, correlation)
     message = storage.find_message(store, request.data.message_id)
     if message is None:

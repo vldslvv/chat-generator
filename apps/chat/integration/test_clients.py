@@ -31,8 +31,8 @@ class Terminal:
 
     def _read(self):
         for line in self.process.stdout:
-            self.transcript.append(line.rstrip())
-            self.lines.put(line.rstrip())
+            self.transcript.append(line.rstrip("\r\n"))
+            self.lines.put(line.rstrip("\r\n"))
 
     def send(self, command):
         self.process.stdin.write(command + "\n")
@@ -125,13 +125,27 @@ def test_python_and_rust_exchange_messages():
                     break
                 assert time.monotonic() < deadline, client.transcript
                 time.sleep(0.05)
-        for sender, recipient, name, message in [
-            (python, rust, "rust_user", "hello from Python 🌎  two spaces"),
-            (rust, python, "python_user", "hello from Rust 🦀  two spaces"),
+        for sender, recipient, sender_name, name, message in [
+            (python, rust, "python_user", "rust_user", "  Python 🌎  spaces  "),
+            (rust, python, "rust_user", "python_user", "  Rust 🦀  spaces  "),
         ]:
             sender.send(f"/send {name} {message}")
             UUID(sender.expect("✓ Accepted ").split("✓ Accepted ", 1)[1].strip())
-            recipient.expect(message)
+            assert recipient.expect(message) == f"← {sender_name}: {message}"
+        for client, name in [(python, "python_user"), (rust, "rust_user")]:
+            message = "  note to myself  "
+            start = len(client.transcript)
+            client.send(f"/send {name} {message}")
+            # The server may deliver to self before or after accepting the send.
+            deadline = time.monotonic() + 10
+            while True:
+                lines = client.transcript[start:]
+                accepted = [line for line in lines if line.startswith("✓ Accepted ")]
+                if accepted and f"← {name}: {message}" in lines:
+                    UUID(accepted[0].split("✓ Accepted ", 1)[1])
+                    break
+                assert time.monotonic() < deadline, client.transcript
+                time.sleep(0.02)
         for client in (python, rust):
             assert not any("delivery_receipt" in line for line in client.transcript)
             client.send("/status")

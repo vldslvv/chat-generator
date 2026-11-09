@@ -61,6 +61,10 @@ class Message(WireModel):
     server_ack_received_at: UtcTimestamp | None
 
 
+class IncomingMessage(Message):
+    sender_name: str
+
+
 class Login(WireModel):
     name: str
 
@@ -96,7 +100,7 @@ class Accepted(WireModel):
 
 class Received(WireModel):
     type: Literal["message_received"]
-    data: Message
+    data: IncomingMessage
 
 
 class ErrorData(WireModel):
@@ -151,22 +155,12 @@ class Correlations:
     send: UUID | None = None
 
 
-def _display(
-    emit: Callable[[str], None], text: str, correlation_id: UUID | None = None
-) -> None:
-    try:
-        emit(text)
-    except (OSError, UnicodeError, ValueError) as error:
-        failure("Server event display failed", error, correlation_id)
-        raise
-
-
 async def handle_event(
     raw: str,
     state: ClientState,
     correlations: Correlations,
     write: Callable[[Request], Awaitable[None]],
-    emit: Callable[[str], None],
+    emit: Callable[[str], Awaitable[None]],
 ) -> None:
     from .state import SessionState, complete_login
 
@@ -174,19 +168,19 @@ async def handle_event(
     if isinstance(event, LoginOk):
         if event.correlation_id != correlations.login:
             raise ValueError("Unexpected login reply")
-        correlations.login = None
         complete_login(state, event.data)
-        _display(emit, f"Logged in as {event.data.name}", event.correlation_id)
+        await emit(f"✓ Logged in as {event.data.name}")
+        correlations.login = None
     elif isinstance(event, Accepted):
         if event.correlation_id != correlations.send:
             raise ValueError("Unexpected send reply")
+        await emit(f"✓ Accepted {event.data.id}")
         correlations.send = None
-        _display(emit, f"✓ Accepted {event.data.id}", event.correlation_id)
     elif isinstance(event, Received):
-        _display(emit, f"{event.data.sender_id}: {event.data.text}")
+        await emit(f"← {event.data.sender_name}: {event.data.text}")
         await write(ack_request(event.data.id, received_at))
     else:
-        failure("Server rejected request", event.data.message, event.correlation_id)
+        await failure("", event.data.message, event.correlation_id)
         if (
             correlations.login is not None
             and event.correlation_id == correlations.login
@@ -196,4 +190,3 @@ async def handle_event(
             state.session_state = SessionState.NONE
         if correlations.send is not None and event.correlation_id == correlations.send:
             correlations.send = None
-        _display(emit, f"✗ Error: {event.data.message}", event.correlation_id)

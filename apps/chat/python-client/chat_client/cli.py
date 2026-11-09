@@ -2,6 +2,7 @@
 
 import argparse
 import asyncio
+import sys
 from contextlib import suppress
 from dataclasses import dataclass, field
 
@@ -9,7 +10,7 @@ import aiohttp
 from pydantic import ValidationError
 
 from . import protocol, terminal, transport
-from .diagnostics import failure
+from .diagnostics import ReportedFailure, describe, failure
 from .state import (
     ClientState,
     ConnectionState,
@@ -25,11 +26,13 @@ class Runtime:
     http: aiohttp.ClientSession
     connection_task: asyncio.Task[None] | None = None
     correlations: protocol.Correlations = field(default_factory=protocol.Correlations)
+    disconnecting: bool = False
 
 
 async def connection_loop(runtime: Runtime) -> None:
     state = runtime.state
     socket = None
+    output_failed = False
     try:
         socket = await transport.open_socket(runtime.http, state.server_url)
         state.connection = socket
@@ -56,15 +59,24 @@ async def connection_loop(runtime: Runtime) -> None:
                     if isinstance(error, ValidationError)
                     else str(error)
                 )
-                failure("Invalid server event", cause, protocol.event_correlation(raw))
-                terminal.output(f"✗ Error: Invalid server event: {error}")
+                await failure(
+                    "Invalid server event", cause, protocol.event_correlation(raw)
+                )
+    except ReportedFailure:
+        pass
+    except terminal.OutputFailure as error:
+        output_failed = True
+        await failure(
+            "Terminal output failed",
+            error,
+            runtime.correlations.send or runtime.correlations.login,
+        )
     except (aiohttp.ClientError, OSError, ValueError, TimeoutError) as error:
-        failure(
+        await failure(
             "Connection failed",
             error,
             runtime.correlations.send or runtime.correlations.login,
         )
-        terminal.output(f"✗ Error: Connection failed: {error}")
     finally:
         try:
             if socket is not None and state.connection is socket:
@@ -75,22 +87,31 @@ async def connection_loop(runtime: Runtime) -> None:
                     or runtime.correlations.login,
                 )
         finally:
+            correlation = runtime.correlations.send or runtime.correlations.login
             reset_connection(state)
             runtime.correlations = protocol.Correlations()
-            terminal.output("Disconnected")
+            if not output_failed:
+                try:
+                    await terminal.output(
+                        "Disconnected"
+                        if runtime.disconnecting
+                        else "Disconnected. Use /connect to reconnect."
+                    )
+                except terminal.OutputFailure as error:
+                    await failure("Terminal output failed", error, correlation)
 
 
 async def disconnect(runtime: Runtime, *, abrupt: bool = False) -> None:
+    runtime.disconnecting = True
     task = runtime.connection_task
     socket = runtime.state.connection
+    reset_connection(runtime.state)
     if socket is not None:
         await transport.close(
             socket,
             abrupt=abrupt,
             correlation_id=runtime.correlations.send or runtime.correlations.login,
         )
-        if abrupt:
-            runtime.state.connection = None
     if task is not None:
         if socket is None or abrupt:
             task.cancel()
@@ -111,24 +132,22 @@ async def execute(runtime: Runtime, command: terminal.Command) -> bool:
                 command.arguments[0] if command.arguments else state.remembered_username
             )
             if username is None:
-                failure("Connect rejected", "Username required: /connect <username>")
-                terminal.output("Username required: /connect <username>")
+                await failure("", "Username required: /connect <username>")
             else:
                 begin_connection(state, username)
+                runtime.disconnecting = False
                 runtime.connection_task = asyncio.create_task(connection_loop(runtime))
         case "/disconnect" | "/drop-connection":
             await disconnect(runtime, abrupt=command.name == "/drop-connection")
         case "/send":
             if state.session_state != SessionState.LOGGED_IN:
-                failure("Send rejected", "Login required before /send")
-                terminal.output("✗ Error: Login required before /send")
+                await failure("", "Login required for /send. Use /connect <username>.")
             elif runtime.correlations.send is not None:
-                failure(
-                    "Send rejected",
-                    "Send in progress; try again after its reply",
+                await failure(
+                    "",
+                    "/send rejected: Send in progress; try again after its reply",
                     runtime.correlations.send,
                 )
-                terminal.output("✗ Error: Send in progress; try again after its reply")
             else:
                 socket = state.connection
                 assert socket is not None
@@ -136,13 +155,13 @@ async def execute(runtime: Runtime, command: terminal.Command) -> bool:
                 runtime.correlations.send = request.correlation_id
                 try:
                     await transport.send(socket, request)
-                except (aiohttp.ClientError, OSError, ConnectionError) as error:
-                    terminal.output(f"✗ Error: Send failed: {error}")
+                except ReportedFailure:
                     await disconnect(runtime, abrupt=True)
+                    await terminal.output("Use /connect to reconnect.")
         case "/status":
-            terminal.output(terminal.format_status(state))
+            await terminal.output(terminal.format_status(state))
         case "/help":
-            terminal.output(terminal.HELP)
+            await terminal.output(terminal.HELP)
         case "/quit":
             await disconnect(runtime)
             return False
@@ -153,14 +172,13 @@ async def run(url: str) -> None:
     timeout = aiohttp.ClientTimeout(total=10)
     async with aiohttp.ClientSession(timeout=timeout) as http:
         runtime = Runtime(ClientState(url), http)
-        terminal.output("Chat client ready. Use /help for commands.")
+        await terminal.output("Chat client ready. Use /help for commands.")
         try:
             async for line in terminal.read_lines():
                 try:
                     command = terminal.parse_command(line)
                 except ValueError as error:
-                    failure("Command rejected", error)
-                    terminal.output(f"✗ Error: {error}")
+                    await failure("", error)
                     continue
                 if not await execute(runtime, command):
                     break
@@ -178,6 +196,8 @@ def main() -> None:
         asyncio.run(run(arguments.url))
     except KeyboardInterrupt:
         pass
-    except (OSError, UnicodeError, ValueError) as error:
-        failure("Terminal operation failed", error)
+    except (OSError, UnicodeError, ValueError, terminal.OutputFailure) as error:
+        print(
+            f"✗ Error: Terminal operation failed: {describe(error)}\n", file=sys.stderr
+        )
         raise SystemExit(1) from None

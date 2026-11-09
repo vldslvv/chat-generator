@@ -45,11 +45,18 @@ pub struct StoredMessage {
 }
 
 #[derive(Deserialize)]
+pub struct IncomingMessage {
+    #[serde(flatten)]
+    pub message: StoredMessage,
+    pub sender_name: String,
+}
+
+#[derive(Deserialize)]
 #[serde(tag = "type", content = "data", rename_all = "snake_case")]
 pub enum ServerEvent {
     LoginOk(User),
     MessageAccepted(StoredMessage),
-    MessageReceived(StoredMessage),
+    MessageReceived(IncomingMessage),
     Error { message: String },
 }
 
@@ -128,7 +135,6 @@ pub fn handle(state: &mut ClientState, protocol: &mut ProtocolState, text: &str)
     let (envelope, received_at) = match decode(text) {
         Ok(decoded) => decoded,
         Err(error) => {
-            effect.display = Some(format!("✗ Error: Invalid server event: {error}"));
             effect.diagnostic = Some((format!("Invalid server event: {error}"), correlation(text)));
             return effect;
         }
@@ -139,7 +145,7 @@ pub fn handle(state: &mut ClientState, protocol: &mut ProtocolState, text: &str)
         ServerEvent::LoginOk(user)
             if matches_login && state.session_state == SessionState::LoginPending =>
         {
-            effect.display = Some(format!("Logged in as {}", user.name));
+            effect.display = Some(format!("✓ Logged in as {}", user.name));
             state::logged_in(state, user);
             protocol.login_correlation = None;
         }
@@ -155,11 +161,13 @@ pub fn handle(state: &mut ClientState, protocol: &mut ProtocolState, text: &str)
             if envelope.correlation_id.is_none()
                 && state.session_state == SessionState::LoggedIn =>
         {
-            effect.display = Some(format!("{}: {}", message.sender_id, message.text));
-            effect.acknowledgment = Some(acknowledge(message.id, received_at));
+            effect.display = Some(format!(
+                "← {}: {}",
+                message.sender_name, message.message.text
+            ));
+            effect.acknowledgment = Some(acknowledge(message.message.id, received_at));
         }
         ServerEvent::Error { message } => {
-            effect.display = Some(format!("✗ Error: {message}"));
             effect.diagnostic = Some((message, envelope.correlation_id));
             if envelope.correlation_id.is_some()
                 && envelope.correlation_id == protocol.send_correlation
@@ -202,6 +210,7 @@ mod tests {
                     "sender_id": "53dd2b06-e8b7-4a19-9c61-9f8df9bf8524",
                     "recipient_id": "629a6d45-679d-4e09-8b3a-d6d779ab415c",
                     "text": "exact  text ",
+                    "sender_name": "alice",
                     "client_sent_at": client_time,
                     "server_received_at": timestamp,
                     "recipient_received_at": recipient_time,
@@ -213,6 +222,8 @@ mod tests {
             let ServerEvent::MessageReceived(message) = envelope.event else {
                 panic!("Expected incoming message");
             };
+            assert_eq!(message.sender_name, "alice");
+            let message = message.message;
             assert_eq!(message.id.to_string(), id);
             assert_eq!(message.text, "exact  text ");
             assert!(message.server_ack_received_at.is_none());

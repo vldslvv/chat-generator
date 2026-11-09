@@ -22,7 +22,10 @@ def message_data():
 
 
 def test_records_preserve_uuid_utc_zero_and_null_wire_alternatives():
-    raw = {"type": "message_received", "data": message_data()}
+    raw = {
+        "type": "message_received",
+        "data": {**message_data(), "sender_name": "alice"},
+    }
     before = datetime.now(UTC)
     event, decoded_at = decode_event(json.dumps(raw))
     assert isinstance(event.data.id, UUID)
@@ -45,7 +48,7 @@ def test_records_preserve_uuid_utc_zero_and_null_wire_alternatives():
     ],
 )
 def test_invalid_wire_records_are_rejected(field, invalid):
-    data = message_data()
+    data = {**message_data(), "sender_name": "alice"}
     data[field] = invalid
     with pytest.raises(ValidationError):
         decode_event(json.dumps({"type": "message_received", "data": data}))

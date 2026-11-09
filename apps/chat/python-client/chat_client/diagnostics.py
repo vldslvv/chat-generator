@@ -1,13 +1,21 @@
-"""Cause-bearing stderr diagnostics without protocol or terminal dependencies."""
+"""Readable cause-bearing stderr diagnostics."""
 
-import logging
 from uuid import UUID
 
+from .terminal import output
 
-def failure(action: str, cause: object, correlation_id: UUID | None = None) -> None:
+
+class ReportedFailure(Exception):
+    """An I/O failure whose user-facing diagnostic has already been emitted."""
+
+
+def describe(cause: object) -> str:
+    return (str(cause) or "operation timed out").replace("\n", "\\n")
+
+
+async def failure(
+    action: str, cause: object, correlation_id: UUID | None = None
+) -> None:
     suffix = f" correlation_id={correlation_id}" if correlation_id is not None else ""
-    description = str(cause) or type(cause).__name__
-    if isinstance(cause, BaseException):
-        description = f"{type(cause).__name__}: {description}"
-    description = description.replace("\n", "\\n")
-    logging.getLogger("chat_client").error("%s: %s%s", action, description, suffix)
+    prefix = f"{action}: " if action else ""
+    await output(f"✗ Error: {prefix}{describe(cause)}{suffix}", error=True)
