@@ -131,7 +131,12 @@ Acceptance confirms server receipt and storage only; the server does not notify 
 
 ### message_received
 
-Notify the recipient of an incoming message with `data` matching the [messages contract](storage.md#messages).
+Notify the recipient of an incoming message with `data` containing all fields from the [messages contract](storage.md#messages) and the following display field.
+
+- `sender_name: string` — sender name taken by the server from the authenticated sender's user record.
+
+Keep `sender_id` and the stored message fields unchanged.
+Include `sender_name` only in the notification payload, without adding it to stored messages or requiring a client-side user lookup.
 
 ### error
 

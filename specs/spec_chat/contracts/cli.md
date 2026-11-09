@@ -7,7 +7,7 @@ Apply this contract to both Python and Rust clients using the shared [WebSocket 
 Accept these commands in the running CLI.
 
 - `/connect <username>` — connect and log in with the supplied name.
-- `/connect` — connect and log in with the remembered name, or display `Username required: /connect <username>` if none exists.
+- `/connect` — connect and log in with the remembered name, or display `✗ Error: Username required: /connect <username>` on stderr if none exists.
 - `/disconnect` — close the connection gracefully and keep the CLI running.
 - `/drop-connection` — terminate the connection without a WebSocket close handshake and keep the CLI running.
 - `/send <recipient> <text>` — send a message using the logged-in session as the sender, preserving spaces in the text.
@@ -70,6 +70,44 @@ Apply these rules when displaying server events.
 
 - Display `✓ Accepted <message_id>` only after receiving `message_accepted`, confirming server receipt and storage.
 - Display `✗ Error: <description>` when the server returns `error`.
-- Display incoming messages and acknowledge them so the server can record receipt timestamps.
+- Display incoming messages using the terminal presentation rules and acknowledge them so the server can record receipt timestamps.
 - Do not display recipient acknowledgment status to the sender.
-- Append output as new lines instead of modifying earlier output.
+- Append completed output blocks as new lines instead of modifying them.
+
+## Terminal presentation
+
+Apply these rules to interactive input, command results, and unsolicited events.
+
+- Use `> ` as the interactive command prompt.
+- Separate output blocks with one blank line.
+- Group related lines of a command result into one block, including all `/status` fields.
+- Present unsolicited incoming messages in separate blocks without waiting for a command to complete.
+- When an event arrives during input, move the active prompt and unfinished input below the event block without changing completed output.
+- Preserve unfinished input and its cursor position when restoring the `> ` prompt.
+- Display incoming messages as `← <sender_name>: <text>`, preserving the original message text.
+- Take `sender_name` from the [message notification](websocket.md#message_received).
+- Confirm successful login with `✓ Logged in as <username>`.
+- Display each local rejection, server error, or operational failure once on stderr as `✗ Error: <description>`.
+- Include the cause and available correlation ID in that same error output to satisfy the [project logging rule](../project.md).
+- Omit exception class names from normal terminal feedback.
+- Include the rejected command and a correction or `/help` hint in local command errors.
+- Display server errors using their message and available correlation ID without reconstructing the originating command.
+- Suggest `/connect <username>` when the user enters `/login`.
+- Explain that `/connect` is needed after detected connection loss.
+- Keep routine heartbeat traffic silent and expose the latest received ping through `/status`.
+- Allow incoming messages and acceptance replies to appear in either server-determined order, including messages sent to oneself.
+
+Example interaction:
+
+```text
+> /login bob
+✗ Error: Unknown command '/login'. Use /connect <username>.
+
+> /connect bob
+✓ Logged in as bob
+
+> /send alice hi
+✓ Accepted 85b6bac2-eccd-4068-870b-924a3c1f3b4a
+
+← alice: Hello Bob
+```

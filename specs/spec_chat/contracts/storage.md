@@ -19,3 +19,5 @@
 | `server_received_at` | UTC timestamp | Server's time when it receives the send request. |
 | `recipient_received_at` | UTC timestamp, `0`, or `null` | Recipient's local time when it decodes the incoming message, before displaying it; `0` means missing or invalid, and `null` means no acknowledgment recorded. |
 | `server_ack_received_at` | UTC timestamp or `null` | Server's time when it receives the recipient's acknowledgment. |
+
+The [incoming message notification](websocket.md#message_received) adds `sender_name` for display; it is not a stored message field.

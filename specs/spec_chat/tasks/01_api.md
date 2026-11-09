@@ -49,6 +49,8 @@ Validate the send request before storing the message.
 
 **Effects:** Resolve recipient to user ID, store the message, and attempt delivery once.
 
+Populate the notification's `sender_name` from the authenticated sender's user record according to the [message notification contract](../contracts/websocket.md#message_received).
+
 **Outputs:** `message_accepted` to the sender, `message_received` to the recipient if delivery succeeds, or `error` to the sender on request rejection.
 
 ### Acknowledge

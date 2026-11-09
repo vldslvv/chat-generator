@@ -31,4 +31,18 @@ Apply to the API, Python client, and Rust client under the [project rules](proje
 
 - Trigger rejected requests and operational failures in each component; verify every failure is logged to stderr with its cause and available correlation ID.
 
+## Client presentation
+
+Apply these scenarios to both clients under the [terminal presentation rules](contracts/cli.md#terminal-presentation).
+
+- Deliver messages between two users and to oneself; verify the notification includes the authenticated sender's name and the client displays `← <sender_name>: <text>` with original spacing.
+- Verify `sender_name` appears only in incoming notifications, while stored messages and acceptance payloads retain the fields defined by the data contract.
+- Run commands and deliver unsolicited messages; verify the interactive prompt and blank-line separation while keeping each multiline command result together.
+- Deliver a message while a command is partially typed; verify the event appears above the restored prompt and preserves the unfinished input and cursor position.
+- Reject `/login`, another unknown command, and an invalid `/send`; verify each error appears once on stderr with an actionable description and available correlation ID.
+- Run `/connect` without a remembered username; verify the error prefix and username hint match the CLI contract.
+- Reject a send on the server; verify the client displays the server message and correlation ID without requiring the originating command.
+- Cause connection loss; verify the client explains how to reconnect and keeps accepting commands.
+- Receive heartbeat pings; verify the client responds without routine terminal output and updates `/status`.
+
 Define evidence collection and cleanup instructions when the test harness exists.
