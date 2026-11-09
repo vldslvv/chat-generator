@@ -15,7 +15,7 @@
 | `sender_id` | UUID | Reference to the sending user. |
 | `recipient_id` | UUID | Reference to the receiving user. |
 | `text` | String | Original message text. |
-| `client_sent_at` | UTC timestamp | Sender's local time immediately before sending. |
+| `client_sent_at` | UTC timestamp or `0` | Sender's local time immediately before sending; `0` means missing or invalid. |
 | `server_received_at` | UTC timestamp | Server's time when it receives the send request. |
-| `recipient_received_at` | UTC timestamp or `null` | Recipient's local time when it decodes the incoming message, before displaying it. |
+| `recipient_received_at` | UTC timestamp, `0`, or `null` | Recipient's local time when it decodes the incoming message, before displaying it; `0` means missing or invalid, and `null` means no acknowledgment recorded. |
 | `server_ack_received_at` | UTC timestamp or `null` | Server's time when it receives the recipient's acknowledgment. |
