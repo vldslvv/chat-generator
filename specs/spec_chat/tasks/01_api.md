@@ -13,10 +13,10 @@ Apply these rules to client connections and requests.
 - Bind successful login to the connection and mark the user online.
 - Require login for sends and acknowledgments, deriving the acting user from the session.
 - Remove sessions on connection closure or detected failure, allowing delayed detection of network loss.
-- Reject malformed requests before storage mutations, except for the timestamp fallback below.
+- Follow the shared [connection behavior](../contracts/websocket.md#connection-behavior) for heartbeat, validation failures, and repeated login.
 - Validate acknowledgments at the API boundary before passing them to storage.
-- Log delivery attempts in the server log.
-- Retain accepted messages if recipients disconnect during delivery.
+- Log delivery attempts and their outcomes in the server log.
+- On delivery failure, retain the stored message and take no further action, including retries or sender notifications.
 
 ## Endpoints
 
@@ -49,7 +49,7 @@ Validate the send request before storing the message.
 
 **Effects:** Resolve recipient to user ID, store the message, and attempt delivery once.
 
-**Outputs:** `message_accepted` to the sender and `message_received` to the recipient, or `error` to the sender on rejection.
+**Outputs:** `message_accepted` to the sender, `message_received` to the recipient if delivery succeeds, or `error` to the sender on request rejection.
 
 ### Acknowledge
 
@@ -116,6 +116,17 @@ Apply these rules when receiving events and storing acknowledgments.
 - Record both acknowledgment timestamps atomically without changing other message fields.
 - Preserve the first acknowledgment timestamps on repeated acknowledgments.
 
+## Design guide
+
+Implement each responsibility below as a separate module with a public interface that hides its implementation and allows behavior to be extended independently.
+
+- Encapsulate storage operations for users, messages, and acknowledgments.
+- Isolate session management for connection bindings, online-user lookup, disconnect cleanup, and duplicate-login policy.
+- Encapsulate delivery attempts and outcome logging.
+- Isolate message handling to coordinate sends and acknowledgments through storage, sessions, and delivery.
+- Isolate the WebSocket API to decode and validate requests, derive the acting user from the session, and format responses.
+- Keep `User` and `Message` as plain data models.
+
 ## Constraints
 
 Apply these constraints to implementation.
@@ -127,7 +138,3 @@ Apply these constraints to implementation.
 - Use Ruff for code checks.
 - Create a Dockerfile for the project.
 - Use pytest for unit and behavior testing.
-
-## Pending design details
-
-Heartbeat timing remains to be agreed.

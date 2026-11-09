@@ -3,6 +3,17 @@
 Apply this contract to the API and both Python and Rust clients.
 Exchange JSON objects over the WebSocket endpoint `/ws`.
 
+## Connection behavior
+
+Apply these rules to every connection and action.
+
+- Have the server send a standard WebSocket ping every 20 seconds on the existing connection.
+- Have clients respond with pong through their WebSocket library.
+- Have the server close the connection if the matching pong does not arrive within 20 seconds of the ping.
+- Have the server return `error` to the requesting client for requests that fail validation, keeping the connection open and existing state unchanged.
+- Reject another `login` on an already logged-in connection, even for the same name.
+- Require disconnecting and opening a new connection to switch users.
+
 ## Envelope
 
 Use these fields for requests, replies, and notifications.
@@ -114,6 +125,7 @@ Reply to a successful login with `data` matching the [users contract](storage.md
 ### message_accepted
 
 Reply to an accepted send with `data` matching the [messages contract](storage.md#messages).
+Acceptance confirms storage only; delivery remains unconfirmed without a `delivery_receipt`.
 
 ### message_received
 
