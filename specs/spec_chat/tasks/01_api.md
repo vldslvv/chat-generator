@@ -20,23 +20,11 @@ Apply these rules to client connections and requests.
 
 ## Endpoints
 
-These actions use the shared WebSocket connection.
-
-### Payload types
-
-Use these types for endpoint inputs and outputs, independently of the event envelope.
-
-- `UUID`: JSON string containing a UUID.
-- `UtcTimestamp`: JSON string containing an ISO 8601 timestamp in UTC.
-- `ClientTimestampInput`: Any JSON value; preserve a valid `UtcTimestamp` and convert missing or invalid values to the JSON number `0`.
-- `User`: JSON object with the fields and types from the [users contract](../contracts/storage.md#users), using `UUID` for its ID.
-- `Message`: JSON object with the fields and types from the [messages contract](../contracts/storage.md#messages), using `UUID` and `UtcTimestamp` for IDs and timestamps.
-- `DeliveryReceipt`: JSON object containing `message_id: UUID`, `recipient_received_at: UtcTimestamp | 0`, and `server_ack_received_at: UtcTimestamp`.
-- `Error`: JSON object containing `message: string`.
+Use the endpoint, envelopes, payload types, and correlation rules in the shared [WebSocket contract](../contracts/websocket.md).
 
 ### Login
 
-**Inputs:** JSON object with `name: string`.
+**Inputs:** [login request](../contracts/websocket.md#login).
 
 Validate login before creating a user or binding the connection.
 
@@ -45,15 +33,11 @@ Validate login before creating a user or binding the connection.
 
 **Effects:** Find or create the user and bind the connection.
 
-**Outputs:** `User` on successful login, or `Error`, returned to the requesting client.
+**Outputs:** `login_ok` or `error` returned to the requesting client.
 
 ### Send
 
-**Inputs:** JSON object with these fields.
-
-- `recipient: string` — recipient name.
-- `text: string` — message content.
-- `client_sent_at: ClientTimestampInput` — optional sender timestamp.
+**Inputs:** [send request](../contracts/websocket.md#send).
 
 Validate the send request before storing the message.
 
@@ -65,14 +49,11 @@ Validate the send request before storing the message.
 
 **Effects:** Resolve recipient to user ID, store the message, and attempt delivery once.
 
-**Outputs:** `Message` to the sender on acceptance and to the recipient on delivery, or `Error` to the sender on rejection.
+**Outputs:** `message_accepted` to the sender and `message_received` to the recipient, or `error` to the sender on rejection.
 
 ### Acknowledge
 
-**Inputs:** JSON object with these fields.
-
-- `message_id: UUID` — message being acknowledged.
-- `recipient_received_at: ClientTimestampInput` — optional recipient timestamp.
+**Inputs:** [ack request](../contracts/websocket.md#ack).
 
 Validate the acknowledgment before updating the stored message.
 
@@ -85,7 +66,7 @@ Validate the acknowledgment before updating the stored message.
 
 **Effects:** Record the acknowledgment.
 
-**Outputs:** `DeliveryReceipt` to the sender if connected, or `Error` to the acknowledging client on validation failure.
+**Outputs:** `delivery_receipt` to the sender if connected, or `error` to the acknowledging client on validation failure.
 
 ## Tables
 
@@ -149,4 +130,4 @@ Apply these constraints to implementation.
 
 ## Pending design details
 
-The WebSocket endpoint path, JSON event envelopes, and heartbeat timing remain to be agreed.
+Heartbeat timing remains to be agreed.
