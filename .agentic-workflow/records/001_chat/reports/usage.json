@@ -1,0 +1,2563 @@
+{
+  "version": 2,
+  "summary": {
+    "tokens": {
+      "input_tokens": {
+        "total": 6223189,
+        "known_subtotal": 6223189,
+        "measured_records": 161,
+        "missing_records": 0
+      },
+      "cached_input_tokens": {
+        "total": 5985280,
+        "known_subtotal": 5985280,
+        "measured_records": 161,
+        "missing_records": 0
+      },
+      "cache_write_input_tokens": {
+        "total": 0,
+        "known_subtotal": 0,
+        "measured_records": 161,
+        "missing_records": 0
+      },
+      "uncached_input_tokens": {
+        "total": 237909,
+        "known_subtotal": 237909,
+        "measured_records": 161,
+        "missing_records": 0
+      },
+      "output_tokens": {
+        "total": 37466,
+        "known_subtotal": 37466,
+        "measured_records": 161,
+        "missing_records": 0
+      },
+      "reasoning_output_tokens": {
+        "total": 5391,
+        "known_subtotal": 5391,
+        "measured_records": 161,
+        "missing_records": 0
+      },
+      "total_tokens": {
+        "total": 6260655,
+        "known_subtotal": 6260655,
+        "measured_records": 161,
+        "missing_records": 0
+      }
+    },
+    "observed_model_measurements": 161,
+    "observed_tool_calls": 152,
+    "wrapper_calls": 88,
+    "observed_nested_operations": 0,
+    "missing_parent_call_relationships": 152,
+    "outcomes": {
+      "returned": 152
+    },
+    "observed_operation_seconds": 3182.2969992160797,
+    "timed_operations": 158,
+    "untimed_operations": 161,
+    "coverage": {
+      "aggregate_snapshot_excluded": 6
+    }
+  },
+  "groups": {
+    "task": [
+      {
+        "key": {
+          "task_id": "01_api"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 3450212,
+              "known_subtotal": 3450212,
+              "measured_records": 80,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 3310208,
+              "known_subtotal": 3310208,
+              "measured_records": 80,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 80,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 140004,
+              "known_subtotal": 140004,
+              "measured_records": 80,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 28525,
+              "known_subtotal": 28525,
+              "measured_records": 80,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 4744,
+              "known_subtotal": 4744,
+              "measured_records": 80,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 3478737,
+              "known_subtotal": 3478737,
+              "measured_records": 80,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 80,
+          "observed_tool_calls": 74,
+          "wrapper_calls": 60,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 74,
+          "outcomes": {
+            "returned": 74
+          },
+          "observed_operation_seconds": 984.2909996509552,
+          "timed_operations": 78,
+          "untimed_operations": 80,
+          "coverage": {
+            "aggregate_snapshot_excluded": 4
+          }
+        }
+      },
+      {
+        "key": {
+          "task_id": "orchestration"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 1984601,
+              "known_subtotal": 1984601,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 1926784,
+              "known_subtotal": 1926784,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 57817,
+              "known_subtotal": 57817,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 4478,
+              "known_subtotal": 4478,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 287,
+              "known_subtotal": 287,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 1989079,
+              "known_subtotal": 1989079,
+              "measured_records": 59,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 59,
+          "observed_tool_calls": 58,
+          "wrapper_calls": 11,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 58,
+          "outcomes": {
+            "returned": 58
+          },
+          "observed_operation_seconds": 1964.7860000133514,
+          "timed_operations": 59,
+          "untimed_operations": 59,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "task_id": "validation"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 788376,
+              "known_subtotal": 788376,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 748288,
+              "known_subtotal": 748288,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 40088,
+              "known_subtotal": 40088,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 4463,
+              "known_subtotal": 4463,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 360,
+              "known_subtotal": 360,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 792839,
+              "known_subtotal": 792839,
+              "measured_records": 22,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 22,
+          "observed_tool_calls": 20,
+          "wrapper_calls": 17,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 20,
+          "outcomes": {
+            "returned": 20
+          },
+          "observed_operation_seconds": 233.21999955177307,
+          "timed_operations": 21,
+          "untimed_operations": 22,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      }
+    ],
+    "agent_run": [
+      {
+        "key": {
+          "agent_run_id": "codex:01a1bde7-e9fa-7351-a75a-a7326e6ff8c8"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 1984601,
+              "known_subtotal": 1984601,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 1926784,
+              "known_subtotal": 1926784,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 57817,
+              "known_subtotal": 57817,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 4478,
+              "known_subtotal": 4478,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 287,
+              "known_subtotal": 287,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 1989079,
+              "known_subtotal": 1989079,
+              "measured_records": 59,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 59,
+          "observed_tool_calls": 58,
+          "wrapper_calls": 11,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 58,
+          "outcomes": {
+            "returned": 58
+          },
+          "observed_operation_seconds": 1964.7860000133514,
+          "timed_operations": 59,
+          "untimed_operations": 59,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "agent_run_id": "codex:01a1bde9-516c-77b2-8ace-d113970d06c7"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 2333172,
+              "known_subtotal": 2333172,
+              "measured_records": 48,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 2286592,
+              "known_subtotal": 2286592,
+              "measured_records": 48,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 48,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 46580,
+              "known_subtotal": 46580,
+              "measured_records": 48,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 22390,
+              "known_subtotal": 22390,
+              "measured_records": 48,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 3223,
+              "known_subtotal": 3223,
+              "measured_records": 48,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 2355562,
+              "known_subtotal": 2355562,
+              "measured_records": 48,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 48,
+          "observed_tool_calls": 44,
+          "wrapper_calls": 35,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 44,
+          "outcomes": {
+            "returned": 44
+          },
+          "observed_operation_seconds": 712.7299997806549,
+          "timed_operations": 46,
+          "untimed_operations": 48,
+          "coverage": {
+            "aggregate_snapshot_excluded": 2
+          }
+        }
+      },
+      {
+        "key": {
+          "agent_run_id": "codex:01a1bdf1-0425-7c72-b4ec-f7b2dca79eb7"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 561155,
+              "known_subtotal": 561155,
+              "measured_records": 16,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 501632,
+              "known_subtotal": 501632,
+              "measured_records": 16,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 16,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 59523,
+              "known_subtotal": 59523,
+              "measured_records": 16,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 3529,
+              "known_subtotal": 3529,
+              "measured_records": 16,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 1204,
+              "known_subtotal": 1204,
+              "measured_records": 16,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 564684,
+              "known_subtotal": 564684,
+              "measured_records": 16,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 16,
+          "observed_tool_calls": 15,
+          "wrapper_calls": 12,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 15,
+          "outcomes": {
+            "returned": 15
+          },
+          "observed_operation_seconds": 141.110999584198,
+          "timed_operations": 16,
+          "untimed_operations": 16,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "agent_run_id": "codex:01a1bdf4-ccc1-75a3-a732-2fefda66d3ee"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 555885,
+              "known_subtotal": 555885,
+              "measured_records": 16,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 521984,
+              "known_subtotal": 521984,
+              "measured_records": 16,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 16,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 33901,
+              "known_subtotal": 33901,
+              "measured_records": 16,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 2606,
+              "known_subtotal": 2606,
+              "measured_records": 16,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 317,
+              "known_subtotal": 317,
+              "measured_records": 16,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 558491,
+              "known_subtotal": 558491,
+              "measured_records": 16,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 16,
+          "observed_tool_calls": 15,
+          "wrapper_calls": 13,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 15,
+          "outcomes": {
+            "returned": 15
+          },
+          "observed_operation_seconds": 130.4500002861023,
+          "timed_operations": 16,
+          "untimed_operations": 16,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "agent_run_id": "codex:01a1bdf6-7034-7630-99b3-18999222de2b"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 788376,
+              "known_subtotal": 788376,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 748288,
+              "known_subtotal": 748288,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 40088,
+              "known_subtotal": 40088,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 4463,
+              "known_subtotal": 4463,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 360,
+              "known_subtotal": 360,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 792839,
+              "known_subtotal": 792839,
+              "measured_records": 22,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 22,
+          "observed_tool_calls": 20,
+          "wrapper_calls": 17,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 20,
+          "outcomes": {
+            "returned": 20
+          },
+          "observed_operation_seconds": 233.21999955177307,
+          "timed_operations": 21,
+          "untimed_operations": 22,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      }
+    ],
+    "role": [
+      {
+        "key": {
+          "role": "implementer"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 2333172,
+              "known_subtotal": 2333172,
+              "measured_records": 48,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 2286592,
+              "known_subtotal": 2286592,
+              "measured_records": 48,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 48,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 46580,
+              "known_subtotal": 46580,
+              "measured_records": 48,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 22390,
+              "known_subtotal": 22390,
+              "measured_records": 48,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 3223,
+              "known_subtotal": 3223,
+              "measured_records": 48,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 2355562,
+              "known_subtotal": 2355562,
+              "measured_records": 48,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 48,
+          "observed_tool_calls": 44,
+          "wrapper_calls": 35,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 44,
+          "outcomes": {
+            "returned": 44
+          },
+          "observed_operation_seconds": 712.7299997806549,
+          "timed_operations": 46,
+          "untimed_operations": 48,
+          "coverage": {
+            "aggregate_snapshot_excluded": 2
+          }
+        }
+      },
+      {
+        "key": {
+          "role": "reviewer"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 1117040,
+              "known_subtotal": 1117040,
+              "measured_records": 32,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 1023616,
+              "known_subtotal": 1023616,
+              "measured_records": 32,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 32,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 93424,
+              "known_subtotal": 93424,
+              "measured_records": 32,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 6135,
+              "known_subtotal": 6135,
+              "measured_records": 32,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 1521,
+              "known_subtotal": 1521,
+              "measured_records": 32,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 1123175,
+              "known_subtotal": 1123175,
+              "measured_records": 32,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 32,
+          "observed_tool_calls": 30,
+          "wrapper_calls": 25,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 30,
+          "outcomes": {
+            "returned": 30
+          },
+          "observed_operation_seconds": 271.5609998703003,
+          "timed_operations": 32,
+          "untimed_operations": 32,
+          "coverage": {
+            "aggregate_snapshot_excluded": 2
+          }
+        }
+      },
+      {
+        "key": {
+          "role": "supervisor"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 1984601,
+              "known_subtotal": 1984601,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 1926784,
+              "known_subtotal": 1926784,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 57817,
+              "known_subtotal": 57817,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 4478,
+              "known_subtotal": 4478,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 287,
+              "known_subtotal": 287,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 1989079,
+              "known_subtotal": 1989079,
+              "measured_records": 59,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 59,
+          "observed_tool_calls": 58,
+          "wrapper_calls": 11,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 58,
+          "outcomes": {
+            "returned": 58
+          },
+          "observed_operation_seconds": 1964.7860000133514,
+          "timed_operations": 59,
+          "untimed_operations": 59,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "role": "validator"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 788376,
+              "known_subtotal": 788376,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 748288,
+              "known_subtotal": 748288,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 40088,
+              "known_subtotal": 40088,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 4463,
+              "known_subtotal": 4463,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 360,
+              "known_subtotal": 360,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 792839,
+              "known_subtotal": 792839,
+              "measured_records": 22,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 22,
+          "observed_tool_calls": 20,
+          "wrapper_calls": 17,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 20,
+          "outcomes": {
+            "returned": 20
+          },
+          "observed_operation_seconds": 233.21999955177307,
+          "timed_operations": 21,
+          "untimed_operations": 22,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      }
+    ],
+    "model": [
+      {
+        "key": {
+          "model": "gpt-6.1-sol"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 6223189,
+              "known_subtotal": 6223189,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 5985280,
+              "known_subtotal": 5985280,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 237909,
+              "known_subtotal": 237909,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 37466,
+              "known_subtotal": 37466,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 5391,
+              "known_subtotal": 5391,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 6260655,
+              "known_subtotal": 6260655,
+              "measured_records": 161,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 161,
+          "observed_tool_calls": 0,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 0,
+          "outcomes": {},
+          "observed_operation_seconds": null,
+          "timed_operations": 0,
+          "untimed_operations": 161,
+          "coverage": {
+            "aggregate_snapshot_excluded": 6
+          }
+        }
+      }
+    ],
+    "effort": [
+      {
+        "key": {
+          "reasoning_effort": "medium"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 6223189,
+              "known_subtotal": 6223189,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 5985280,
+              "known_subtotal": 5985280,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 237909,
+              "known_subtotal": 237909,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 37466,
+              "known_subtotal": 37466,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 5391,
+              "known_subtotal": 5391,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 6260655,
+              "known_subtotal": 6260655,
+              "measured_records": 161,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 161,
+          "observed_tool_calls": 0,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 0,
+          "outcomes": {},
+          "observed_operation_seconds": null,
+          "timed_operations": 0,
+          "untimed_operations": 161,
+          "coverage": {
+            "aggregate_snapshot_excluded": 6
+          }
+        }
+      }
+    ],
+    "model_effort": [
+      {
+        "key": {
+          "model": "gpt-6.1-sol",
+          "reasoning_effort": "medium"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 6223189,
+              "known_subtotal": 6223189,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 5985280,
+              "known_subtotal": 5985280,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 237909,
+              "known_subtotal": 237909,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 37466,
+              "known_subtotal": 37466,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 5391,
+              "known_subtotal": 5391,
+              "measured_records": 161,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 6260655,
+              "known_subtotal": 6260655,
+              "measured_records": 161,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 161,
+          "observed_tool_calls": 0,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 0,
+          "outcomes": {},
+          "observed_operation_seconds": null,
+          "timed_operations": 0,
+          "untimed_operations": 161,
+          "coverage": {
+            "aggregate_snapshot_excluded": 6
+          }
+        }
+      }
+    ],
+    "task_model_effort": [
+      {
+        "key": {
+          "task_id": "01_api",
+          "model": "gpt-6.1-sol",
+          "reasoning_effort": "medium"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 3450212,
+              "known_subtotal": 3450212,
+              "measured_records": 80,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 3310208,
+              "known_subtotal": 3310208,
+              "measured_records": 80,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 80,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 140004,
+              "known_subtotal": 140004,
+              "measured_records": 80,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 28525,
+              "known_subtotal": 28525,
+              "measured_records": 80,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 4744,
+              "known_subtotal": 4744,
+              "measured_records": 80,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 3478737,
+              "known_subtotal": 3478737,
+              "measured_records": 80,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 80,
+          "observed_tool_calls": 0,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 0,
+          "outcomes": {},
+          "observed_operation_seconds": null,
+          "timed_operations": 0,
+          "untimed_operations": 80,
+          "coverage": {
+            "aggregate_snapshot_excluded": 4
+          }
+        }
+      },
+      {
+        "key": {
+          "task_id": "orchestration",
+          "model": "gpt-6.1-sol",
+          "reasoning_effort": "medium"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 1984601,
+              "known_subtotal": 1984601,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 1926784,
+              "known_subtotal": 1926784,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 57817,
+              "known_subtotal": 57817,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 4478,
+              "known_subtotal": 4478,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 287,
+              "known_subtotal": 287,
+              "measured_records": 59,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 1989079,
+              "known_subtotal": 1989079,
+              "measured_records": 59,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 59,
+          "observed_tool_calls": 0,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 0,
+          "outcomes": {},
+          "observed_operation_seconds": null,
+          "timed_operations": 0,
+          "untimed_operations": 59,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "task_id": "validation",
+          "model": "gpt-6.1-sol",
+          "reasoning_effort": "medium"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": 788376,
+              "known_subtotal": 788376,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": 748288,
+              "known_subtotal": 748288,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": 0,
+              "known_subtotal": 0,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": 40088,
+              "known_subtotal": 40088,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": 4463,
+              "known_subtotal": 4463,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": 360,
+              "known_subtotal": 360,
+              "measured_records": 22,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": 792839,
+              "known_subtotal": 792839,
+              "measured_records": 22,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 22,
+          "observed_tool_calls": 0,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 0,
+          "outcomes": {},
+          "observed_operation_seconds": null,
+          "timed_operations": 0,
+          "untimed_operations": 22,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      }
+    ],
+    "tool": [
+      {
+        "key": {
+          "name": "exec"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 88,
+          "wrapper_calls": 88,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 88,
+          "outcomes": {
+            "returned": 88
+          },
+          "observed_operation_seconds": 186.7099986076355,
+          "timed_operations": 88,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 6
+          }
+        }
+      },
+      {
+        "key": {
+          "name": "followup_task"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 1,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 1,
+          "outcomes": {
+            "returned": 1
+          },
+          "observed_operation_seconds": 0.004999876022338867,
+          "timed_operations": 1,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "name": "send_message"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 29,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 29,
+          "outcomes": {
+            "returned": 29
+          },
+          "observed_operation_seconds": 1.3500003814697266,
+          "timed_operations": 29,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 6
+          }
+        }
+      },
+      {
+        "key": {
+          "name": "spawn_agent"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 4,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 4,
+          "outcomes": {
+            "returned": 4
+          },
+          "observed_operation_seconds": 0.2740001678466797,
+          "timed_operations": 4,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "name": "wait_agent"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 30,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 30,
+          "outcomes": {
+            "returned": 30
+          },
+          "observed_operation_seconds": 891.2560000419617,
+          "timed_operations": 30,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      }
+    ],
+    "task_tool": [
+      {
+        "key": {
+          "task_id": "01_api",
+          "name": "exec"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 60,
+          "wrapper_calls": 60,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 60,
+          "outcomes": {
+            "returned": 60
+          },
+          "observed_operation_seconds": 128.7899992465973,
+          "timed_operations": 60,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 4
+          }
+        }
+      },
+      {
+        "key": {
+          "task_id": "01_api",
+          "name": "send_message"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 14,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 14,
+          "outcomes": {
+            "returned": 14
+          },
+          "observed_operation_seconds": 0.5940003395080566,
+          "timed_operations": 14,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 4
+          }
+        }
+      },
+      {
+        "key": {
+          "task_id": "orchestration",
+          "name": "exec"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 11,
+          "wrapper_calls": 11,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 11,
+          "outcomes": {
+            "returned": 11
+          },
+          "observed_operation_seconds": 2.7689998149871826,
+          "timed_operations": 11,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "task_id": "orchestration",
+          "name": "followup_task"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 1,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 1,
+          "outcomes": {
+            "returned": 1
+          },
+          "observed_operation_seconds": 0.004999876022338867,
+          "timed_operations": 1,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "task_id": "orchestration",
+          "name": "send_message"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 12,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 12,
+          "outcomes": {
+            "returned": 12
+          },
+          "observed_operation_seconds": 0.5690000057220459,
+          "timed_operations": 12,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "task_id": "orchestration",
+          "name": "spawn_agent"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 4,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 4,
+          "outcomes": {
+            "returned": 4
+          },
+          "observed_operation_seconds": 0.2740001678466797,
+          "timed_operations": 4,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "task_id": "orchestration",
+          "name": "wait_agent"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 30,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 30,
+          "outcomes": {
+            "returned": 30
+          },
+          "observed_operation_seconds": 891.2560000419617,
+          "timed_operations": 30,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "task_id": "validation",
+          "name": "exec"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 17,
+          "wrapper_calls": 17,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 17,
+          "outcomes": {
+            "returned": 17
+          },
+          "observed_operation_seconds": 55.150999546051025,
+          "timed_operations": 17,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      },
+      {
+        "key": {
+          "task_id": "validation",
+          "name": "send_message"
+        },
+        "summary": {
+          "tokens": {
+            "input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "cache_write_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "uncached_input_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "reasoning_output_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            },
+            "total_tokens": {
+              "total": null,
+              "known_subtotal": null,
+              "measured_records": 0,
+              "missing_records": 0
+            }
+          },
+          "observed_model_measurements": 0,
+          "observed_tool_calls": 3,
+          "wrapper_calls": 0,
+          "observed_nested_operations": 0,
+          "missing_parent_call_relationships": 3,
+          "outcomes": {
+            "returned": 3
+          },
+          "observed_operation_seconds": 0.18700003623962402,
+          "timed_operations": 3,
+          "untimed_operations": 0,
+          "coverage": {
+            "aggregate_snapshot_excluded": 1
+          }
+        }
+      }
+    ]
+  },
+  "attribution_omissions": {
+    "task": {
+      "event_ids": [],
+      "diagnostics_without_attribution": 0
+    },
+    "agent_run": {
+      "event_ids": [],
+      "diagnostics_without_attribution": 0
+    },
+    "role": {
+      "event_ids": [],
+      "diagnostics_without_attribution": 0
+    },
+    "model": {
+      "event_ids": [],
+      "diagnostics_without_attribution": 6
+    },
+    "effort": {
+      "event_ids": [],
+      "diagnostics_without_attribution": 6
+    },
+    "model_effort": {
+      "event_ids": [],
+      "diagnostics_without_attribution": 6
+    },
+    "task_model_effort": {
+      "event_ids": [],
+      "diagnostics_without_attribution": 6
+    },
+    "tool": {
+      "event_ids": [],
+      "diagnostics_without_attribution": 6
+    },
+    "task_tool": {
+      "event_ids": [],
+      "diagnostics_without_attribution": 6
+    }
+  },
+  "spawn_tree": {
+    "nodes": [
+      {
+        "agent_id": "codex:01a1bde7-e9fa-7351-a75a-a7326e6ff8c8",
+        "session_id": "01a1bde7-e9fa-7351-a75a-a7326e6ff8c8",
+        "agent_run_ids": [
+          "codex:01a1bde7-e9fa-7351-a75a-a7326e6ff8c8"
+        ],
+        "turns": [
+          "01a1bde8-e8be-71c3-b692-504f1350e7d1"
+        ]
+      },
+      {
+        "agent_id": "codex:01a1bde9-516c-77b2-8ace-d113970d06c7",
+        "session_id": "01a1bde9-516c-77b2-8ace-d113970d06c7",
+        "agent_run_ids": [
+          "codex:01a1bde9-516c-77b2-8ace-d113970d06c7"
+        ],
+        "turns": [
+          "01a1bde9-5171-7632-9738-4ba4f9fa8e1e",
+          "01a1bdf2-e8ee-7640-961d-3e7b47a32c6a"
+        ]
+      },
+      {
+        "agent_id": "codex:01a1bdf1-0425-7c72-b4ec-f7b2dca79eb7",
+        "session_id": "01a1bdf1-0425-7c72-b4ec-f7b2dca79eb7",
+        "agent_run_ids": [
+          "codex:01a1bdf1-0425-7c72-b4ec-f7b2dca79eb7"
+        ],
+        "turns": [
+          "01a1bdf1-042d-7791-afa3-e6695f294292"
+        ]
+      },
+      {
+        "agent_id": "codex:01a1bdf4-ccc1-75a3-a732-2fefda66d3ee",
+        "session_id": "01a1bdf4-ccc1-75a3-a732-2fefda66d3ee",
+        "agent_run_ids": [
+          "codex:01a1bdf4-ccc1-75a3-a732-2fefda66d3ee"
+        ],
+        "turns": [
+          "01a1bdf4-ccc7-7333-84af-da28ad2b01db"
+        ]
+      },
+      {
+        "agent_id": "codex:01a1bdf6-7034-7630-99b3-18999222de2b",
+        "session_id": "01a1bdf6-7034-7630-99b3-18999222de2b",
+        "agent_run_ids": [
+          "codex:01a1bdf6-7034-7630-99b3-18999222de2b"
+        ],
+        "turns": [
+          "01a1bdf6-7039-7780-b73a-e2c64f372844"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "parent": "codex:01a1bde7-e9fa-7351-a75a-a7326e6ff8c8",
+        "child": "codex:01a1bde9-516c-77b2-8ace-d113970d06c7",
+        "relationship": "spawn",
+        "parent_in_selection": true
+      },
+      {
+        "parent": "codex:01a1bde7-e9fa-7351-a75a-a7326e6ff8c8",
+        "child": "codex:01a1bdf1-0425-7c72-b4ec-f7b2dca79eb7",
+        "relationship": "spawn",
+        "parent_in_selection": true
+      },
+      {
+        "parent": "codex:01a1bde7-e9fa-7351-a75a-a7326e6ff8c8",
+        "child": "codex:01a1bdf4-ccc1-75a3-a732-2fefda66d3ee",
+        "relationship": "spawn",
+        "parent_in_selection": true
+      },
+      {
+        "parent": "codex:01a1bde7-e9fa-7351-a75a-a7326e6ff8c8",
+        "child": "codex:01a1bdf6-7034-7630-99b3-18999222de2b",
+        "relationship": "spawn",
+        "parent_in_selection": true
+      }
+    ]
+  },
+  "diagnostics": [
+    {
+      "source_id": "native/01a1bde7-e9fa-7351-a75a-a7326e6ff8c8/01a1bde8-e8be-71c3-b692-504f1350e7d1.jsonl",
+      "session_id": "01a1bde7-e9fa-7351-a75a-a7326e6ff8c8",
+      "turn_id": "01a1bde8-e8be-71c3-b692-504f1350e7d1",
+      "code": "aggregate_snapshot_excluded",
+      "implementation_id": "001_chat",
+      "adapter": "codex",
+      "agent_id": "codex:01a1bde7-e9fa-7351-a75a-a7326e6ff8c8",
+      "task_id": "orchestration",
+      "role": "supervisor",
+      "agent_run_id": "codex:01a1bde7-e9fa-7351-a75a-a7326e6ff8c8",
+      "assignment_id": "3ab86c91d3903e3a372fb06b"
+    },
+    {
+      "source_id": "native/01a1bde9-516c-77b2-8ace-d113970d06c7/01a1bde9-5171-7632-9738-4ba4f9fa8e1e.jsonl",
+      "session_id": "01a1bde9-516c-77b2-8ace-d113970d06c7",
+      "turn_id": "01a1bde9-5171-7632-9738-4ba4f9fa8e1e",
+      "code": "aggregate_snapshot_excluded",
+      "implementation_id": "001_chat",
+      "adapter": "codex",
+      "agent_id": "codex:01a1bde9-516c-77b2-8ace-d113970d06c7",
+      "task_id": "01_api",
+      "role": "implementer",
+      "agent_run_id": "codex:01a1bde9-516c-77b2-8ace-d113970d06c7",
+      "assignment_id": "4b984f2553928b07f38225b7"
+    },
+    {
+      "source_id": "native/01a1bde9-516c-77b2-8ace-d113970d06c7/01a1bdf2-e8ee-7640-961d-3e7b47a32c6a.jsonl",
+      "session_id": "01a1bde9-516c-77b2-8ace-d113970d06c7",
+      "turn_id": "01a1bdf2-e8ee-7640-961d-3e7b47a32c6a",
+      "code": "aggregate_snapshot_excluded",
+      "implementation_id": "001_chat",
+      "adapter": "codex",
+      "agent_id": "codex:01a1bde9-516c-77b2-8ace-d113970d06c7",
+      "task_id": "01_api",
+      "role": "implementer",
+      "agent_run_id": "codex:01a1bde9-516c-77b2-8ace-d113970d06c7",
+      "assignment_id": "4b984f2553928b07f38225b7"
+    },
+    {
+      "source_id": "native/01a1bdf1-0425-7c72-b4ec-f7b2dca79eb7/01a1bdf1-042d-7791-afa3-e6695f294292.jsonl",
+      "session_id": "01a1bdf1-0425-7c72-b4ec-f7b2dca79eb7",
+      "turn_id": "01a1bdf1-042d-7791-afa3-e6695f294292",
+      "code": "aggregate_snapshot_excluded",
+      "implementation_id": "001_chat",
+      "adapter": "codex",
+      "agent_id": "codex:01a1bdf1-0425-7c72-b4ec-f7b2dca79eb7",
+      "task_id": "01_api",
+      "role": "reviewer",
+      "agent_run_id": "codex:01a1bdf1-0425-7c72-b4ec-f7b2dca79eb7",
+      "assignment_id": "d0844c6324c9da3bf2f3c39a"
+    },
+    {
+      "source_id": "native/01a1bdf4-ccc1-75a3-a732-2fefda66d3ee/01a1bdf4-ccc7-7333-84af-da28ad2b01db.jsonl",
+      "session_id": "01a1bdf4-ccc1-75a3-a732-2fefda66d3ee",
+      "turn_id": "01a1bdf4-ccc7-7333-84af-da28ad2b01db",
+      "code": "aggregate_snapshot_excluded",
+      "implementation_id": "001_chat",
+      "adapter": "codex",
+      "agent_id": "codex:01a1bdf4-ccc1-75a3-a732-2fefda66d3ee",
+      "task_id": "01_api",
+      "role": "reviewer",
+      "agent_run_id": "codex:01a1bdf4-ccc1-75a3-a732-2fefda66d3ee",
+      "assignment_id": "26e0f6c82f55eae4c4acd392"
+    },
+    {
+      "source_id": "native/01a1bdf6-7034-7630-99b3-18999222de2b/01a1bdf6-7039-7780-b73a-e2c64f372844.jsonl",
+      "session_id": "01a1bdf6-7034-7630-99b3-18999222de2b",
+      "turn_id": "01a1bdf6-7039-7780-b73a-e2c64f372844",
+      "code": "aggregate_snapshot_excluded",
+      "implementation_id": "001_chat",
+      "adapter": "codex",
+      "agent_id": "codex:01a1bdf6-7034-7630-99b3-18999222de2b",
+      "task_id": "validation",
+      "role": "validator",
+      "agent_run_id": "codex:01a1bdf6-7034-7630-99b3-18999222de2b",
+      "assignment_id": "877853cba251fe62b2d237b5"
+    }
+  ],
+  "assignments": [
+    {
+      "agent_id": "codex:01a1bde7-e9fa-7351-a75a-a7326e6ff8c8",
+      "agent_run_id": "codex:01a1bde7-e9fa-7351-a75a-a7326e6ff8c8",
+      "agent_name": "root",
+      "native_agent_name": null,
+      "native_agent_path": "/root",
+      "task_id": "orchestration",
+      "role": "supervisor",
+      "purpose": null,
+      "assignment_id": "3ab86c91d3903e3a372fb06b",
+      "assignment_source": "native",
+      "assignment_evidence": [],
+      "turns": [
+        "01a1bde8-e8be-71c3-b692-504f1350e7d1"
+      ],
+      "outcomes": [
+        "completed"
+      ],
+      "observed_settings": [
+        {
+          "model": "gpt-6.1-sol",
+          "reasoning_effort": "medium"
+        }
+      ],
+      "requested_settings": []
+    },
+    {
+      "agent_id": "codex:01a1bde9-516c-77b2-8ace-d113970d06c7",
+      "agent_run_id": "codex:01a1bde9-516c-77b2-8ace-d113970d06c7",
+      "agent_name": "James",
+      "native_agent_name": "James",
+      "native_agent_path": "/root/api",
+      "task_id": "01_api",
+      "role": "implementer",
+      "purpose": null,
+      "assignment_id": "4b984f2553928b07f38225b7",
+      "assignment_source": "native",
+      "assignment_evidence": [],
+      "turns": [
+        "01a1bde9-5171-7632-9738-4ba4f9fa8e1e",
+        "01a1bdf2-e8ee-7640-961d-3e7b47a32c6a"
+      ],
+      "outcomes": [
+        "completed"
+      ],
+      "observed_settings": [
+        {
+          "model": "gpt-6.1-sol",
+          "reasoning_effort": "medium"
+        }
+      ],
+      "requested_settings": []
+    },
+    {
+      "agent_id": "codex:01a1bdf1-0425-7c72-b4ec-f7b2dca79eb7",
+      "agent_run_id": "codex:01a1bdf1-0425-7c72-b4ec-f7b2dca79eb7",
+      "agent_name": "Laplace",
+      "native_agent_name": "Laplace",
+      "native_agent_path": "/root/review",
+      "task_id": "01_api",
+      "role": "reviewer",
+      "purpose": null,
+      "assignment_id": "d0844c6324c9da3bf2f3c39a",
+      "assignment_source": "native",
+      "assignment_evidence": [],
+      "turns": [
+        "01a1bdf1-042d-7791-afa3-e6695f294292"
+      ],
+      "outcomes": [
+        "completed"
+      ],
+      "observed_settings": [
+        {
+          "model": "gpt-6.1-sol",
+          "reasoning_effort": "medium"
+        }
+      ],
+      "requested_settings": []
+    },
+    {
+      "agent_id": "codex:01a1bdf4-ccc1-75a3-a732-2fefda66d3ee",
+      "agent_run_id": "codex:01a1bdf4-ccc1-75a3-a732-2fefda66d3ee",
+      "agent_name": "Curie",
+      "native_agent_name": "Curie",
+      "native_agent_path": "/root/review_fixed",
+      "task_id": "01_api",
+      "role": "reviewer",
+      "purpose": null,
+      "assignment_id": "26e0f6c82f55eae4c4acd392",
+      "assignment_source": "native",
+      "assignment_evidence": [],
+      "turns": [
+        "01a1bdf4-ccc7-7333-84af-da28ad2b01db"
+      ],
+      "outcomes": [
+        "completed"
+      ],
+      "observed_settings": [
+        {
+          "model": "gpt-6.1-sol",
+          "reasoning_effort": "medium"
+        }
+      ],
+      "requested_settings": []
+    },
+    {
+      "agent_id": "codex:01a1bdf6-7034-7630-99b3-18999222de2b",
+      "agent_run_id": "codex:01a1bdf6-7034-7630-99b3-18999222de2b",
+      "agent_name": "Noether",
+      "native_agent_name": "Noether",
+      "native_agent_path": "/root/validation",
+      "task_id": "validation",
+      "role": "validator",
+      "purpose": null,
+      "assignment_id": "877853cba251fe62b2d237b5",
+      "assignment_source": "native",
+      "assignment_evidence": [],
+      "turns": [
+        "01a1bdf6-7039-7780-b73a-e2c64f372844"
+      ],
+      "outcomes": [
+        "completed"
+      ],
+      "observed_settings": [
+        {
+          "model": "gpt-6.1-sol",
+          "reasoning_effort": "medium"
+        }
+      ],
+      "requested_settings": []
+    }
+  ],
+  "native_sources": [
+    {
+      "adapter": "codex",
+      "session_id": "01a1bde7-e9fa-7351-a75a-a7326e6ff8c8",
+      "path": "native/01a1bde7-e9fa-7351-a75a-a7326e6ff8c8/01a1bde8-e8be-71c3-b692-504f1350e7d1.jsonl",
+      "source_version": "codex-rollout-0.167.0",
+      "turn_ids": [
+        "01a1bde8-e8be-71c3-b692-504f1350e7d1"
+      ]
+    },
+    {
+      "adapter": "codex",
+      "session_id": "01a1bde9-516c-77b2-8ace-d113970d06c7",
+      "path": "native/01a1bde9-516c-77b2-8ace-d113970d06c7/01a1bde9-5171-7632-9738-4ba4f9fa8e1e.jsonl",
+      "source_version": "codex-rollout-0.167.0",
+      "turn_ids": [
+        "01a1bde9-5171-7632-9738-4ba4f9fa8e1e"
+      ]
+    },
+    {
+      "adapter": "codex",
+      "session_id": "01a1bde9-516c-77b2-8ace-d113970d06c7",
+      "path": "native/01a1bde9-516c-77b2-8ace-d113970d06c7/01a1bdf2-e8ee-7640-961d-3e7b47a32c6a.jsonl",
+      "source_version": "codex-rollout-0.167.0",
+      "turn_ids": [
+        "01a1bdf2-e8ee-7640-961d-3e7b47a32c6a"
+      ]
+    },
+    {
+      "adapter": "codex",
+      "session_id": "01a1bdf1-0425-7c72-b4ec-f7b2dca79eb7",
+      "path": "native/01a1bdf1-0425-7c72-b4ec-f7b2dca79eb7/01a1bdf1-042d-7791-afa3-e6695f294292.jsonl",
+      "source_version": "codex-rollout-0.167.0",
+      "turn_ids": [
+        "01a1bdf1-042d-7791-afa3-e6695f294292"
+      ]
+    },
+    {
+      "adapter": "codex",
+      "session_id": "01a1bdf4-ccc1-75a3-a732-2fefda66d3ee",
+      "path": "native/01a1bdf4-ccc1-75a3-a732-2fefda66d3ee/01a1bdf4-ccc7-7333-84af-da28ad2b01db.jsonl",
+      "source_version": "codex-rollout-0.167.0",
+      "turn_ids": [
+        "01a1bdf4-ccc7-7333-84af-da28ad2b01db"
+      ]
+    },
+    {
+      "adapter": "codex",
+      "session_id": "01a1bdf6-7034-7630-99b3-18999222de2b",
+      "path": "native/01a1bdf6-7034-7630-99b3-18999222de2b/01a1bdf6-7039-7780-b73a-e2c64f372844.jsonl",
+      "source_version": "codex-rollout-0.167.0",
+      "turn_ids": [
+        "01a1bdf6-7039-7780-b73a-e2c64f372844"
+      ]
+    }
+  ],
+  "limitations": [
+    "Only saved native turns and their proven dispatch descendants are included.",
+    "Known subtotals exclude missing measurements; totals are scoped to observed evidence.",
+    "Operation durations can overlap and are not wall-clock, CPU or billed time.",
+    "Absent parent-call relationships do not establish absence of nested operations.",
+    "Observed settings come from native context, not necessarily provider confirmation."
+  ],
+  "implementation_id": "001_chat"
+}
