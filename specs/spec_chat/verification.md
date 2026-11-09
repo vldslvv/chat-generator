@@ -1,7 +1,8 @@
 # Verification
 
-Verification is not run yet; execution is deferred until an automated WebSocket test harness exists.
-The API checks do not require the Python or Rust application clients.
+Use the existing API and client integration harnesses for these checks.
+The offline scenario requires implementing the revised specs and extending the harness as described in the [test and demo plan](offline_delivery_test_plan.md).
+API checks do not require the Python or Rust application clients.
 
 ## Check boundaries
 
@@ -22,8 +23,20 @@ Use these scenarios as a checklist for the [API behavior](tasks/01_api.md) and [
 - Submit missing or malformed client timestamps; verify the stored values become `0`.
 - Repeat an acknowledgment; verify the first acknowledgment timestamps remain unchanged.
 - Withhold pong responses; verify the server closes the connection according to the heartbeat timing.
-- Cause delivery to fail after storage; verify one logged attempt, a retained message, and no retry or failure notification to the sender.
+- Cause delivery to fail after storage; verify a logged attempt, a retained pending message, and another attempt through `flush_messages` on recipient login without a sender failure notification.
 - Restart the server; verify both collections are empty.
+
+## Offline delivery
+
+Run the [Alice/Bob scenario and output checks](offline_delivery_test_plan.md#scenario-and-checks) with the same server and client processes throughout.
+
+- Run once with Alice in Python and Bob in Rust, then swap languages with a fresh server.
+- Verify offline sends report local queueing and receive acceptance only after the sender reconnects.
+- Verify Bob receives Alice's queued message while she remains disconnected and receives acceptance for his own queued message.
+- Keep the initial headless test and visual demo limited to observable CLI actions, acceptance, and displayed delivery.
+
+The expected server state is Alice's queued message acknowledged and Bob's queued message pending for Alice.
+CLI output alone does not verify that internal state; acknowledgment storage checks remain at the API/storage boundary.
 
 ## Failure logging
 
@@ -45,4 +58,4 @@ Apply these scenarios to both clients under the [terminal presentation rules](co
 - Cause connection loss; verify the client explains how to reconnect and keeps accepting commands.
 - Receive heartbeat pings; verify the client responds without routine terminal output and updates `/status`.
 
-Define evidence collection and cleanup instructions when the test harness exists.
+Use the [test and demo plan](offline_delivery_test_plan.md) for offline scenario diagnostics and cleanup.

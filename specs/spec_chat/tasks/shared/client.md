@@ -12,7 +12,8 @@ Apply these rules to each client implementation.
 - Handle commands, connection lifecycle, remembered usernames, and status output according to the [CLI contract](../../contracts/cli.md#commands).
 - Process incoming server events and heartbeats while accepting terminal input.
 - Encode requests and match responses according to the [WebSocket envelope](../../contracts/websocket.md#envelope).
-- Capture `client_sent_at` in UTC immediately before sending a message.
+- Implement client `flush_messages` and queue retention according to the [outgoing queue contract](../../contracts/cli.md#outgoing-queue).
+- Capture `client_sent_at` in UTC immediately before transmitting each message, including queued messages.
 - Capture `recipient_received_at` in UTC when decoding an incoming message, display the message, then acknowledge it.
 - Use the server-provided `sender_name` from [incoming message events](../../contracts/websocket.md#message_received) to identify the sender in terminal output.
 - Display server acceptance and errors according to the [CLI behavior](../../contracts/cli.md#behavior).
@@ -31,6 +32,7 @@ Implement each responsibility as a separate module with a public interface that 
 - Isolate WebSocket transport, heartbeat handling, graceful closure, and abrupt termination.
 - Isolate connection and login state management.
 - Isolate protocol encoding, event handling, request correlation, and acknowledgment handling.
+- Encapsulate outgoing queue operations and `flush_messages` in a separate module.
 - Keep state separate from the logic that operates on it.
 
 ## Acceptance
@@ -42,4 +44,6 @@ Apply the same observable checks to each implementation.
 - Verify incoming messages display the sender's name, including messages sent to oneself.
 - Verify command results and unsolicited events follow the terminal presentation rules without delaying incoming events.
 - Verify each failure appears once on stderr with an actionable cause and available correlation ID.
-- Verify disconnection leaves the CLI usable and preserves only the specified state without queues, retries, or automatic reconnection.
+- Verify disconnection leaves the CLI usable and retains queued messages without automatic reconnection.
+- Verify `flush_messages` sends retained messages after login as the same user and removes only entries with matching acceptance replies.
+- Verify the [offline scenario](../../verification.md#offline-delivery) with both Python and Rust client assignments.

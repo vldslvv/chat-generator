@@ -2,8 +2,8 @@
 
 ## Context
 
-Handle login, live messaging, acknowledgments, and storage using the [data contract](../contracts/storage.md).
-Support online-only delivery without offline queues or replay.
+Handle login, online and offline messaging, acknowledgments, and storage using the [data contract](../contracts/storage.md).
+Follow the shared [delivery behavior](../contracts/websocket.md#delivery-behavior) for pending messages and server `flush_messages`.
 
 ## Behavior
 
@@ -16,7 +16,7 @@ Apply these rules to client connections and requests.
 - Follow the shared [connection behavior](../contracts/websocket.md#connection-behavior) for heartbeat, validation failures, and repeated login.
 - Validate acknowledgments at the API boundary before passing them to storage.
 - Log delivery attempts and their outcomes in the server log.
-- On delivery failure, retain the stored message and take no further action, including retries or sender notifications.
+- On delivery failure, retain the pending message for `flush_messages` on a later recipient login without notifying the sender.
 
 ## Endpoints
 
@@ -31,7 +31,7 @@ Validate login before creating a user or binding the connection.
 - Require `name` to match the [user name format](../contracts/storage.md#users).
 - Reject a second active login for the same name through the session resolver.
 
-**Effects:** Find or create the user and bind the connection.
+**Effects:** Find or create the user, bind the connection, and invoke `flush_messages` for that recipient after successful login.
 
 **Outputs:** `login_ok` or `error` returned to the requesting client.
 
@@ -42,14 +42,14 @@ Validate login before creating a user or binding the connection.
 Validate the send request before storing the message.
 
 - Require an active login and derive `sender_id` from its session.
-- Require `recipient` to identify an existing, online user.
+- Require `recipient` to identify an existing user, whether online or offline.
 - Require `text` to be present.
 - Preserve valid `client_sent_at` values and replace missing or malformed values with `0` without rejecting the request.
 - Replace any client-provided `server_received_at` with the server's receive time.
 
-**Effects:** Resolve recipient to user ID, store the message, and attempt delivery once.
+**Effects:** Resolve recipient to user ID, store the message in acceptance order, and attempt immediate delivery if the recipient is online.
 
-Populate the notification's `sender_name` from the authenticated sender's user record according to the [message notification contract](../contracts/websocket.md#message_received).
+Resolve the notification's `sender_name` from the stored message's `sender_id` according to the [message notification contract](../contracts/websocket.md#message_received).
 
 **Outputs:** `message_accepted` to the sender, `message_received` to the recipient if delivery succeeds, or `error` to the sender on request rejection.
 
@@ -81,6 +81,8 @@ Apply these operations to in-memory records.
 
 - Start with empty `users` and `messages` collections.
 - Retain records across client disconnections until the server process stops, then discard them.
+- Preserve message acceptance order in the collection without sorting by client timestamps or adding fields to the data contract.
+- Derive each recipient's pending queue from the messages collection without separate queue storage or a broker.
 
 ### Find or create user
 
@@ -106,6 +108,27 @@ Apply these operations to in-memory records.
 - **Effects:** Record the first acknowledgment's timestamps.
 - **Outputs:** Updated message record.
 
+### Find message
+
+- **Inputs:** Message ID.
+- **Effects:** Look up without changing the record.
+- **Outputs:** Message record or absent result.
+
+### List pending messages
+
+- **Inputs:** Recipient ID.
+- **Effects:** Select that recipient's messages with `server_ack_received_at: null`.
+- **Outputs:** Pending messages in server acceptance order.
+
+## flush_messages
+
+Apply this server operation after successful recipient login.
+
+- List the recipient's pending messages through storage and attempt each once in acceptance order while connected.
+- Coordinate new-message delivery with `flush_messages` so newer messages do not overtake older pending messages.
+- Resolve sender names from stored user records, allowing senders to remain offline.
+- Leave messages stored and pending until acknowledgment, following the shared [delivery behavior](../contracts/websocket.md#delivery-behavior).
+
 ## Timestamps
 
 Apply these rules when receiving events and storing acknowledgments.
@@ -124,7 +147,7 @@ Implement each responsibility below as a separate module with a public interface
 
 - Encapsulate storage operations for users, messages, and acknowledgments.
 - Isolate session management for connection bindings, online-user lookup, disconnect cleanup, and duplicate-login policy.
-- Encapsulate delivery attempts and outcome logging.
+- Encapsulate delivery attempts, `flush_messages`, and outcome logging.
 - Isolate message handling to coordinate sends and acknowledgments through storage, sessions, and delivery.
 - Isolate the WebSocket API to decode and validate requests, derive the acting user from the session, and format responses.
 - Keep `User` and `Message` as plain data models.

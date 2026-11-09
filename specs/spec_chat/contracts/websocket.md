@@ -14,6 +14,21 @@ Apply these rules to every connection and action.
 - Reject another `login` on an already logged-in connection, even for the same name.
 - Require disconnecting and opening a new connection to switch users.
 
+## Delivery behavior
+
+Apply these rules to accepted messages and successful logins.
+
+- Have the server accept messages for existing recipients whether online or offline.
+- Have the server attempt immediate delivery when the recipient is online.
+- Treat messages with `server_ack_received_at: null` as pending delivery.
+- Have the server run `flush_messages` for the recipient after every successful login, attempting all their pending messages even when senders are offline.
+- Deliver messages in server acceptance order, independently of client timestamps and IDs.
+- Keep unacknowledged messages pending for the next login after failed or unacknowledged delivery attempts.
+- Remove acknowledged messages from pending delivery while retaining their stored records.
+
+`flush_messages` names an internal operation, not a new endpoint or batch request.
+Duplicate handling and retries during an established connection remain outside this scope.
+
 ## Envelope
 
 Use these fields for requests, replies, and notifications.
@@ -84,14 +99,15 @@ Example request:
 }
 ```
 
-If Bob is offline, the server correlates the error with that request.
+An existing offline Bob receives the message on a later login; the sender receives `message_accepted` immediately after storage.
+An unknown recipient still produces a correlated error.
 
 ```json
 {
   "type": "error",
   "correlation_id": "629a6d45-679d-4e09-8b3a-d6d779ab415c",
   "data": {
-    "message": "Recipient is offline"
+    "message": "Recipient does not exist"
   }
 }
 ```
@@ -133,7 +149,7 @@ Acceptance confirms server receipt and storage only; the server does not notify 
 
 Notify the recipient of an incoming message with `data` containing all fields from the [messages contract](storage.md#messages) and the following display field.
 
-- `sender_name: string` — sender name taken by the server from the authenticated sender's user record.
+- `sender_name: string` — sender name resolved from the stored message's `sender_id`, without requiring an active sender session.
 
 Keep `sender_id` and the stored message fields unchanged.
 Include `sender_name` only in the notification payload, without adding it to stored messages or requiring a client-side user lookup.

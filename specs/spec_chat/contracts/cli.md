@@ -10,7 +10,7 @@ Accept these commands in the running CLI.
 - `/connect` — connect and log in with the remembered name, or display `✗ Error: Username required: /connect <username>` on stderr if none exists.
 - `/disconnect` — close the connection gracefully and keep the CLI running.
 - `/drop-connection` — terminate the connection without a WebSocket close handshake and keep the CLI running.
-- `/send <recipient> <text>` — send a message using the logged-in session as the sender, preserving spaces in the text.
+- `/send <recipient> <text>` — send while logged in or queue offline for the remembered user, preserving spaces in the text.
 - `/status` — display local connection and session information without contacting the server.
 - `/help` — list commands and their syntax.
 - `/quit` — close any connection and exit.
@@ -22,16 +22,31 @@ Apply these rules when handling commands.
 - Make `/disconnect` and `/drop-connection` no-ops when disconnected.
 - Remember the username after successful login and retain it across disconnections until the CLI exits.
 - Clear the authenticated user ID and session on disconnection while retaining the server URL and last heartbeat time.
-- Require a successful login before `/send`, rejecting missing recipients or empty text locally.
+- Require an active login or a disconnected client with a remembered username for `/send`.
+- Reject missing recipients or empty text locally.
 - Treat text after the recipient as the message without requiring quotes.
 - Reject unknown commands locally.
-- Keep the CLI running after detected connection loss and require `/connect` to reconnect.
-- Do not queue messages, retry sends, or reconnect automatically.
+- Keep the CLI running after detected connection loss and require explicit `/connect` to reconnect and resume queued sends.
+
+## Outgoing queue
+
+Apply these rules to messages awaiting server acceptance.
+
+- Keep one FIFO queue for all recipients, associating each entry with its sending username.
+- Append valid `/send` messages to the queue and attempt to send them in queue order when logged in.
+- Call client `flush_messages` after successful login to send that user's queued messages in insertion order using individual `send` requests.
+- Assign each send attempt a fresh `correlation_id` and retain it with its queue entry to match replies.
+- Remove an entry only when its matching `message_accepted` arrives.
+- Retain entries after disconnection or a server error without retrying them during the same connection.
+- Send queued entries only when logged in as their associated username.
+
+`flush_messages` is an internal operation, not a CLI command or WebSocket endpoint.
 
 ## Client state
 
 Keep these fields in memory using language-neutral types.
 `Optional<T>` means a value or `null`, and `Enum<...>` lists allowed values.
+`Queue<T>` means an ordered FIFO collection, and `QueuedMessage` is defined below.
 Use the [shared UUID and UTC timestamp types](websocket.md#shared-types) and the [user record](storage.md#users).
 
 - `server_url: String` — configured WebSocket URL.
@@ -42,13 +57,22 @@ Use the [shared UUID and UTC timestamp types](websocket.md#shared-types) and the
 - `authenticated_user: Optional<User>` — ID and name returned by `login_ok`, initially `null`.
 - `remembered_username: Optional<String>` — last successfully logged-in name, initially `null`.
 - `last_heartbeat_at: Optional<UtcTimestamp>` — latest received ping's local time, initially `null`.
+- `outgoing_queue: Queue<QueuedMessage>` — messages awaiting acceptance, initially empty.
+
+Keep these fields in each `QueuedMessage`.
+
+- `sender_name: String` — logged-in or remembered username when queued.
+- `recipient: String` — recipient name.
+- `text: String` — original message text.
+- `correlation_id: Optional<UUID>` — current send attempt's correlation ID, initially `null`.
 
 Apply these state lifecycle rules.
 
 - Clear `login_username` when login completes or the connection attempt fails.
 - Reset the connection handle, connection state, session state, login username, and authenticated user on disconnection.
-- Retain the server URL, remembered username, and last heartbeat across disconnections.
-- Keep no delivery queue, pending-request map, or message-status map.
+- Retain the server URL, remembered username, last heartbeat, and outgoing queue across disconnections.
+- Reset queued entries' correlation IDs to `null` on disconnection.
+- Keep acceptance matching within queue entries without a separate pending-request or message-status map.
 - Discard all state when the CLI exits.
 
 ## Status
@@ -66,8 +90,9 @@ The remembered username is retained separately from the authenticated user shown
 
 ## Behavior
 
-Apply these rules when displaying server events.
+Apply these rules when displaying queue actions and server events.
 
+- Display `✓ Queued locally` when an offline `/send` enters the outgoing queue.
 - Display `✓ Accepted <message_id>` only after receiving `message_accepted`, confirming server receipt and storage.
 - Display `✗ Error: <description>` when the server returns `error`.
 - Display incoming messages using the terminal presentation rules and acknowledge them so the server can record receipt timestamps.
