@@ -9,7 +9,7 @@ from helpers import login, receive, request, sent_message
 from websockets.sync.client import connect
 
 
-def test_message_ack_and_first_timestamp_pair(clients):
+def test_message_and_silent_acknowledgments(clients):
     alice, bob = clients
     sender, recipient = login(alice, "alice"), login(bob, "bob")
     before = datetime.now(UTC)
@@ -37,17 +37,16 @@ def test_message_ack_and_first_timestamp_pair(clients):
             "server_ack_received_at": "1900-01-01T00:00:00Z",
         },
     )
-    receipt = receive(alice)
-    assert receipt["type"] == "delivery_receipt"
-    assert "correlation_id" not in receipt
-    assert receipt["data"]["message_id"] == message["id"]
-    assert receipt["data"]["recipient_received_at"] == "2026-11-08T12:01:00+00:00"
-    assert before <= datetime.fromisoformat(receipt["data"]["server_ack_received_at"])
     request(bob, "ack", {"message_id": message["id"], "recipient_received_at": 17})
-    assert receive(alice) == receipt
-    # There is no separate success reply to either acknowledgment.
-    with pytest.raises(TimeoutError):
-        bob.recv(timeout=0.05)
+    # A later request on Bob's connection establishes that both acks were handled.
+    request(bob, "send", {"recipient": "alice", "text": "acknowledged"})
+    assert receive(bob)["type"] == "message_accepted"
+    reply = receive(alice)
+    assert reply["type"] == "message_received"
+    assert reply["data"]["text"] == "acknowledged"
+    for client in (alice, bob):
+        with pytest.raises(TimeoutError):
+            client.recv(timeout=0.05)
 
 
 @pytest.mark.parametrize(
@@ -71,8 +70,6 @@ def test_timestamp_fallback(clients, timestamp):
     login(bob, "bob")
     message = sent_message(alice, bob, client_sent_at=timestamp)
     assert message["client_sent_at"] == 0
-    request(bob, "ack", {"message_id": message["id"], "recipient_received_at": timestamp})
-    assert receive(alice)["data"]["recipient_received_at"] == 0
 
 
 def test_missing_timestamps_and_empty_text(clients):
@@ -82,8 +79,6 @@ def test_missing_timestamps_and_empty_text(clients):
     message = sent_message(alice, bob, text="")
     assert message["text"] == ""
     assert message["client_sent_at"] == 0
-    request(bob, "ack", {"message_id": message["id"]})
-    assert receive(alice)["data"]["recipient_received_at"] == 0
 
 
 @pytest.mark.parametrize("name", ["", "Alice", "a-b", "a b", "é", "x" * 33, "alice\n", 1])
@@ -141,14 +136,16 @@ def test_valid_correlation_echo_preserves_representation(clients):
     assert receive(alice)["correlation_id"] == correlation
 
 
-def test_rejected_actions_leave_message_unacknowledged_and_connections_usable(clients):
+def test_rejected_actions_keep_connections_usable(clients):
     alice, bob = clients
     for kind, data in [
         ("send", {"recipient": "bob", "text": "x"}),
         ("ack", {"message_id": str(uuid4())}),
     ]:
         correlation = request(alice, kind, data)
-        assert receive(alice)["correlation_id"] == correlation
+        reply = receive(alice)
+        assert reply["type"] == "error"
+        assert reply["correlation_id"] == correlation
     login(alice, "alice")
     login(bob, "bob")
     message = sent_message(alice, bob)
@@ -172,9 +169,6 @@ def test_rejected_actions_leave_message_unacknowledged_and_connections_usable(cl
         assert reply["type"] == "error"
         assert reply["correlation_id"] == correlation
     request(bob, "ack", {"message_id": message["id"]})
-    receipt = receive(alice)
-    assert receipt["type"] == "delivery_receipt"
-    assert receipt["data"]["recipient_received_at"] == 0
     with pytest.raises(TimeoutError):
         bob.recv(timeout=0.05)
     with pytest.raises(TimeoutError):

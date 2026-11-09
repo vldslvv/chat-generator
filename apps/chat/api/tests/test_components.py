@@ -1,8 +1,10 @@
 import asyncio
+import json
 import logging
 from dataclasses import asdict
-from uuid import uuid4
+from uuid import UUID, uuid4
 
+import pytest
 from starlette.websockets import WebSocket
 
 from chat import sessions, storage
@@ -31,13 +33,87 @@ def test_storage_first_ack_is_atomic_and_users_are_stable():
     }
     assert storage.find_message(store, message.id) == first
     assert storage.find_message(store, uuid4()) is None
-    assert storage.Storage().users == storage.Storage().messages == {}
+    fresh = storage.Storage()
+    assert storage.find_user(fresh, "alice") is None
+    assert storage.find_user(fresh, "bob") is None
+    assert storage.find_message(fresh, message.id) is None
+
+
+@pytest.mark.parametrize(
+    "timestamp,expected",
+    [
+        ({}, 0),
+        ({"recipient_received_at": None}, 0),
+        ({"recipient_received_at": 42}, 0),
+        ({"recipient_received_at": True}, 0),
+        ({"recipient_received_at": {}}, 0),
+        ({"recipient_received_at": []}, 0),
+        ({"recipient_received_at": "bad"}, 0),
+        ({"recipient_received_at": "2026-11-08"}, 0),
+        ({"recipient_received_at": "2026-11-08T12:00:00"}, 0),
+        ({"recipient_received_at": "2026-11-08T12:00:00+01:00"}, 0),
+        ({"recipient_received_at": "2026-11-08T12:00:00Z"}, "2026-11-08T12:00:00Z"),
+        (
+            {"recipient_received_at": "2026-11-08T12:00:00+00:00"},
+            "2026-11-08T12:00:00+00:00",
+        ),
+    ],
+)
+def test_ack_validation_records_first_event_timestamps(timestamp, expected):
+    # Observe stored ack values through public storage operations because a valid
+    # acknowledgment deliberately produces no response or notification.
+    store, active = storage.Storage(), sessions.Sessions()
+    alice, bob = (storage.find_or_create_user(store, name) for name in ("alice", "bob"))
+    message = storage.store_message(store, alice.id, bob.id, "original", 0, "send-event")
+    connection = object()
+    sessions.bind(active, connection, bob)
+
+    def ack(data):
+        return request_adapter.validate_json(
+            json.dumps({"type": "ack", "correlation_id": str(uuid4()), "data": data})
+        )
+
+    first = ack({"message_id": str(message.id), "server_ack_received_at": "forged", **timestamp})
+    assert asyncio.run(handle(store, active, connection, first, "ack-event")) is None
+    stored = storage.find_message(store, message.id)
+    assert asdict(stored) == {
+        **asdict(message),
+        "recipient_received_at": expected,
+        "server_ack_received_at": "ack-event",
+    }
+    repeated = ack({"message_id": str(message.id), "recipient_received_at": "later"})
+    assert asyncio.run(handle(store, active, connection, repeated, "later-event")) is None
+    assert storage.find_message(store, message.id) == stored
+
+
+def test_invalid_ack_does_not_change_storage():
+    store, active = storage.Storage(), sessions.Sessions()
+    alice, bob = (storage.find_or_create_user(store, name) for name in ("alice", "bob"))
+    message = storage.store_message(store, alice.id, bob.id, "original", 0, "send-event")
+    connection = object()
+    for actor, message_id in [(None, message.id), (alice, message.id), (bob, uuid4())]:
+        sessions.disconnect(active, connection)
+        if actor is not None:
+            sessions.bind(active, connection, actor)
+        request = request_adapter.validate_json(
+            json.dumps(
+                {
+                    "type": "ack",
+                    "correlation_id": str(uuid4()),
+                    "data": {"message_id": str(message_id)},
+                }
+            )
+        )
+        with pytest.raises(ValueError):
+            asyncio.run(handle(store, active, connection, request, "ack-event"))
+        assert storage.find_message(store, message.id) == message
 
 
 def test_delivery_failure_retains_message_and_never_retries(caplog):
     # A real Starlette connection with a failing ASGI transport deterministically
     # models the failure after online validation and storage, without a socket race.
     transport_calls = []
+    correlation = str(uuid4())
 
     async def receive():
         return {"type": "websocket.connect"}
@@ -62,13 +138,12 @@ def test_delivery_failure_retains_message_and_never_retries(caplog):
         sessions.bind(active, bob_connection, bob)
         request = request_adapter.validate_json(
             '{"type":"send","correlation_id":"'
-            + str(uuid4())
+            + correlation
             + '","data":{"recipient":"bob","text":"retained"}}'
         )
         reply = await handle(store, active, alice_connection, request, "event-received-time")
         assert reply["type"] == "message_accepted"
-        assert len(store.messages) == 1
-        message = next(iter(store.messages.values()))
+        message = storage.find_message(store, UUID(reply["data"]["id"]))
         assert message.text == "retained"
         assert message.server_received_at == "event-received-time"
         assert message.server_ack_received_at is None
@@ -84,6 +159,10 @@ def test_delivery_failure_retains_message_and_never_retries(caplog):
         asyncio.run(scenario())
     assert sum("Delivery attempt" in record.message for record in caplog.records) == 1
     assert sum("Delivery failed" in record.message for record in caplog.records) == 1
+    assert "transport lost" in caplog.text
+    assert all(correlation in record.message for record in caplog.records)
+    failure = next(record for record in caplog.records if "Delivery failed" in record.message)
+    assert failure.levelno >= logging.WARNING
 
 
 def test_session_resolver_prevents_duplicate_and_rebinding():

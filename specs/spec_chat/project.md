@@ -6,6 +6,7 @@ Build a local messaging app with a FastAPI/Uvicorn server and independent Python
 - Follow the [engineering guidelines](../../agentic-workflow/policies/GUIDELINES.md).
 - Use the shared [WebSocket](contracts/websocket.md) and [storage](contracts/storage.md) contracts.
 - Support online-only messaging with in-memory server storage and no external services.
+- Never fail silently in the API or either client: log every rejected request and operational failure to stderr with its cause and available correlation ID.
 
 ## Implementation directories
 

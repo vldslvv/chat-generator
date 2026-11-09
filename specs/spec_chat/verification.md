@@ -1,7 +1,7 @@
 # Verification
 
 Verification is not run yet; execution is deferred until an automated WebSocket test harness exists.
-The Python and Rust application clients are not required.
+The API checks do not require the Python or Rust application clients.
 
 ## Check boundaries
 
@@ -24,5 +24,11 @@ Use these scenarios as a checklist for the [API behavior](tasks/01_api.md) and [
 - Withhold pong responses; verify the server closes the connection according to the heartbeat timing.
 - Cause delivery to fail after storage; verify one logged attempt, a retained message, and no retry or failure notification to the sender.
 - Restart the server; verify both collections are empty.
+
+## Failure logging
+
+Apply to the API, Python client, and Rust client under the [project rules](project.md).
+
+- Trigger rejected requests and operational failures in each component; verify every failure is logged to stderr with its cause and available correlation ID.
 
 Define evidence collection and cleanup instructions when the test harness exists.

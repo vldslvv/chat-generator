@@ -43,30 +43,17 @@ async def handle(
             received_at,
         )
         data = jsonable_encoder(asdict(message))
-        await deliver(active, recipient.id, event("message_received", data))
+        await deliver(active, recipient.id, event("message_received", data), correlation)
         return event("message_accepted", data, correlation)
     message = storage.find_message(store, request.data.message_id)
     if message is None:
         raise ValueError("Message does not exist")
     if message.recipient_id != actor.id:
         raise ValueError("Only the recipient may acknowledge this message")
-    message = storage.record_acknowledgment(
+    storage.record_acknowledgment(
         store,
         message.id,
         request.data.recipient_received_at,
         received_at,
     )
-    if sessions.online_connection(active, message.sender_id) is not None:
-        await deliver(
-            active,
-            message.sender_id,
-            event(
-                "delivery_receipt",
-                {
-                    "message_id": str(message.id),
-                    "recipient_received_at": message.recipient_received_at,
-                    "server_ack_received_at": message.server_ack_received_at,
-                },
-            ),
-        )
     return None
