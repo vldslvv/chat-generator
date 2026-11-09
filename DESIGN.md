@@ -12,7 +12,7 @@ Rest of the documents are derived from it, enriching the context and instruction
 
 To maintain alignment between WORKFLOW.md and the rest of the documents, an eval is implemented that uses LLM as a judge approach. To use it, run <put eval here>.
 
-# Specifications
+## Specifications
 
 Specifications are implemented as a set of tasks and DAG-like execution section.
 
@@ -20,9 +20,24 @@ Specifications are implemented as a set of tasks and DAG-like execution section.
 
 Each task is a self-contained unit of work.
 
-# Implementation flows
+## Implementation flows
 
 The main agent is supervisor -- it reads the task order and spawns agents that implement individual tasks.
 
 There are two possible flows: direct flow and plan-review flow. Direct flow uses the single agent session to implement and plan-review has two agents, one implements, another reviews using fresh context, iterating until acceptance is reached.
 
+The supervisor support implementation from scratch, reconciliation against changed requirements, and new task flow against existing project.
+
+# Chat design
+
+The application is designed around contracts and behaviours.
+
+There are few contracts:
+
+<contract links at spec_chat here>>
+
+There are two conceptual entities: api and chat
+
+Api is here: <link>
+
+Chat has a generic behaviour: <link>, while Python and 
