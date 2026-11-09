@@ -42,6 +42,16 @@ Apply these rules to messages awaiting server acceptance.
 
 `flush_messages` is an internal operation, not a CLI command or WebSocket endpoint.
 
+## Client responsiveness
+
+Apply while outgoing socket writes are waiting for capacity.
+
+- Keep receiving server events and heartbeats while sending queued messages.
+- Keep receiving server events when acknowledgment or pong writes are blocked.
+- Keep terminal commands usable while outgoing writes are blocked.
+- Complete disconnection without waiting for the peer to resume reading.
+- Prevent writes from a closed connection from reaching a later connection.
+
 ## Client state
 
 Keep these fields in memory using language-neutral types.
@@ -120,7 +130,7 @@ Apply these rules to interactive input, command results, and unsolicited events.
 - Suggest `/connect <username>` when the user enters `/login`.
 - Explain that `/connect` is needed after detected connection loss.
 - Keep routine heartbeat traffic silent and expose the latest received ping through `/status`.
-- Allow incoming messages and acceptance replies to appear in either server-determined order, including messages sent to oneself.
+- Accept event arrival orders permitted by the [delivery contract](websocket.md#delivery-behavior).
 
 Example interaction:
 

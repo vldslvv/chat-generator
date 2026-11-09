@@ -10,7 +10,7 @@ Own terminal interaction, connection state, and client-side message handling usi
 Apply these rules to each client implementation.
 
 - Handle commands, connection lifecycle, remembered usernames, and status output according to the [CLI contract](../../contracts/cli.md#commands).
-- Process incoming server events and heartbeats while accepting terminal input.
+- Follow the [client responsiveness rules](../../contracts/cli.md#client-responsiveness) during normal sends and queue flushing.
 - Encode requests and match responses according to the [WebSocket envelope](../../contracts/websocket.md#envelope).
 - Implement client `flush_messages` and queue retention according to the [outgoing queue contract](../../contracts/cli.md#outgoing-queue).
 - Capture `client_sent_at` in UTC immediately before transmitting each message, including queued messages.

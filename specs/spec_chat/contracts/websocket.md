@@ -20,6 +20,9 @@ Apply these rules to accepted messages and successful logins.
 
 - Have the server accept messages for existing recipients whether online or offline.
 - Have the server attempt immediate delivery when the recipient is online.
+- Attempt delivery to an online recipient after storage even if sending `message_accepted` fails.
+- Allow `message_accepted` and `message_received` to arrive in either order, including self-sends.
+- Apply acceptance-order guarantees to recipient deliveries without requiring sender replies to wait for pending-message replay.
 - Treat messages with `server_ack_received_at: null` as pending delivery.
 - Have the server run `flush_messages` for the recipient after every successful login, attempting all their pending messages even when senders are offline.
 - Deliver messages in server acceptance order, independently of client timestamps and IDs.

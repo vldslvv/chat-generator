@@ -24,6 +24,9 @@ Use these scenarios as a checklist for the [API behavior](tasks/01_api.md) and [
 - Repeat an acknowledgment; verify the first acknowledgment timestamps remain unchanged.
 - Withhold pong responses; verify the server closes the connection according to the heartbeat timing.
 - Cause delivery to fail after storage; verify a logged attempt, a retained pending message, and another attempt through `flush_messages` on recipient login without a sender failure notification.
+- Fail the sender's acceptance-reply transport after storage and verify immediate delivery to an online recipient.
+- Collect self-send events by type and verify their payloads and correlations without assuming arrival order.
+- Submit a new message during pending-message replay and verify recipient delivery order without constraining sender-reply timing.
 - Restart the server; verify both collections are empty.
 
 ## Offline delivery
@@ -37,6 +40,18 @@ Run the [Alice/Bob scenario and output checks](offline_delivery_test_plan.md#sce
 
 The expected server state is Alice's queued message acknowledged and Bob's queued message pending for Alice.
 CLI output alone does not verify that internal state; acknowledgment storage checks remain at the API/storage boundary.
+
+## Client backpressure
+
+Verify the [responsiveness contract](contracts/cli.md#client-responsiveness) in both clients using a real WebSocket peer.
+
+- Exercise blocked writes during reconnect flushing and ordinary sends.
+- Stop peer reads and send enough queued data to produce outgoing backpressure.
+- Continue incoming notifications until acknowledgment writes also encounter backpressure.
+- Verify incoming messages, heartbeat state and `/status` remain observable before peer reads resume.
+- Resume peer reads and verify acknowledgments retain their captured receive timestamps.
+- Exercise `/disconnect` and `/drop-connection` while writes remain blocked.
+- Reconnect and verify retained messages use fresh attempts without stale connection writes.
 
 ## Failure logging
 
