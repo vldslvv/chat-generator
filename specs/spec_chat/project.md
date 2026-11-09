@@ -5,6 +5,7 @@ Build a local messaging app with a FastAPI/Uvicorn server and independent Python
 - Implement the [API](tasks/01_api.md), [Python client](tasks/02_python_client.md), and [Rust client](tasks/03_rust_client.md).
 - Follow the [engineering guidelines](../../agentic-workflow/policies/GUIDELINES.md).
 - Use the shared [WebSocket](contracts/websocket.md) and [storage](contracts/storage.md) contracts.
+- Preserve the public setup commands, executable names and launch options in the [launch contract](contracts/launch.md) across regeneration.
 - Support online and offline messaging with in-memory client queues, server storage, and no external services.
 - Limit offline delivery to running processes and attempts on reconnect, leaving duplicate handling and retries during an established connection for later.
 - Never fail silently in the API or either client: log every rejected request and operational failure to stderr with its cause and available correlation ID.

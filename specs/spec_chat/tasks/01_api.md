@@ -160,6 +160,7 @@ Apply these constraints to implementation.
 - Use Pydantic to validate endpoint inputs, preserving the timestamp fallback rules.
 - Optionally use Pydantic to validate endpoint outputs.
 - Use uv for dependency management.
+- Implement the server interface and generate the offline runner configuration specified in the [launch contract](../contracts/launch.md), including its applicable acceptance checks.
 - Use Ruff for code checks.
 - Create a Dockerfile for the project.
 - Use pytest for unit and behavior testing.

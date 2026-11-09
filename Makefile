@@ -6,7 +6,8 @@ REPO_ROOT := $(shell dirname -- "$(MAKEFILE_LIST)")
 # Identify an implementation explicitly for trace and scoped cleanup.
 IMPL ?=
 TRACE_INTERVAL ?= 5
-export IMPL TRACE_INTERVAL
+OFFLINE_CONFIG ?= apps/chat/offline-delivery.json
+export IMPL TRACE_INTERVAL OFFLINE_CONFIG
 EVAL_AGENT_TIMEOUT ?= 1800
 EVAL_COMMAND_TIMEOUT ?= 60
 SPEC_BUNDLE ?=
@@ -21,7 +22,7 @@ WORKFLOW_REASONING ?= medium
 
 help:
 	@echo "make test-offline-delivery  Check queued delivery with both client language assignments"
-	@echo "make demo-offline-delivery  Show the offline scenario in tmux; Space advances, q exits"
+	@echo "make demo-offline-delivery  Play the offline scenario every 5s; w explains, q exits"
 	@echo "make eval-specs    Report on current specs against bundle templates; no repairs"
 	@echo "                       SPEC_BUNDLE=specs/todolist (default: all bundles)"
 	@echo "                       SPECS_MODEL=gpt-6-astra SPECS_REASONING=medium SPECS_TIMEOUT=1800 (defaults)"
@@ -58,12 +59,13 @@ clean-runs:
 clean-tasks:
 	@cd "$(REPO_ROOT)" && rm -rf -- "$${IMPL:?IMPL must identify an implementation directory}/tasks"
 
-.PHONY: test-offline-delivery demo-offline-delivery
+.PHONY: prepare-offline-delivery test-offline-delivery demo-offline-delivery
 
-test-offline-delivery:
-	@cd "$(REPO_ROOT)" && cargo build --locked --manifest-path apps/chat/rust-client/Cargo.toml
-	@cd "$(REPO_ROOT)" && uv run --frozen --project apps/chat/api pytest apps/chat/integration/test_offline_delivery.py -v
+prepare-offline-delivery:
+	@cd "$(REPO_ROOT)" && python3 tools/offline_delivery/configuration.py
 
-demo-offline-delivery:
-	@cd "$(REPO_ROOT)" && cargo build --locked --manifest-path apps/chat/rust-client/Cargo.toml
-	@cd "$(REPO_ROOT)" && uv run --frozen --project apps/chat/api python apps/chat/integration/offline_delivery.py
+test-offline-delivery: prepare-offline-delivery
+	@cd "$(REPO_ROOT)" && uv run --frozen --project tools/offline_delivery pytest tools/offline_delivery -v
+
+demo-offline-delivery: prepare-offline-delivery
+	@cd "$(REPO_ROOT)" && python3 tools/offline_delivery/scenario.py

@@ -4,6 +4,12 @@ Use the existing API and client integration harnesses for these checks.
 The offline scenario requires implementing the revised specs and extending the harness as described in the [test and demo plan](offline_delivery_test_plan.md).
 API checks do not require the Python or Rust application clients.
 
+## Setup and launch
+
+Run the [launch contract acceptance checks](contracts/launch.md#acceptance) after
+generation, including clean setup, a nondefault server port and both offline
+delivery targets without runner or configuration edits.
+
 ## Check boundaries
 
 Apply when preparing API verification.

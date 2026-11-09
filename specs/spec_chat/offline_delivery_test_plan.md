@@ -12,7 +12,7 @@ Apply these prerequisites before implementing the runners.
 
 - Implement the active [server delivery](contracts/websocket.md#delivery-behavior) and [client queue](contracts/cli.md#outgoing-queue) contracts.
 - Use the [CLI contract's queue feedback](contracts/cli.md#behavior), including `✓ Queued locally` for offline sends.
-- Use the existing Python environments and a built Rust binary, with `tmux` required only for the visual demo.
+- Use the setup and launch commands from the [launch contract](contracts/launch.md), with `tmux` required only for the visual demo.
 
 ## Entry points
 
@@ -23,9 +23,11 @@ Add these commands to the repository's [Makefile](../../Makefile).
 
 ## Shared runner
 
-Implement the scenario driver in Python under `apps/chat/integration/`.
+Keep the scenario driver in Python under `tools/offline_delivery/`, outside disposable implementations.
 
-- Reuse the process setup and command/output handling in the [existing integration harness](../../apps/chat/integration/test_clients.py).
+- Configure executable argument arrays and working directories through `OFFLINE_CONFIG`, as described in the [runner guide](../../tools/offline_delivery/README.md).
+- Regenerate the default launch configuration from the [launch contract](contracts/launch.md#offline-runner-configuration) without changing the durable runner.
+- Keep runner dependencies independent of application environments and observe only the [CLI contract](contracts/cli.md).
 - Keep one scenario definition with separate adapters for subprocess pipes and visible terminal panes.
 - Start a fresh server on an available localhost port and wait for readiness before connecting clients.
 - Drive clients through their normal CLI commands and observe their output while they communicate through WebSockets.
@@ -63,8 +65,10 @@ Apply these rules to the interactive demo.
 
 - Open a dedicated `tmux` session with labeled Server, Alice, and Bob panes running the actual processes.
 - Enter CLI commands visibly in the appropriate pane and observe output using the same scenario checks.
-- Show the current step in the `tmux` status line and wait for the viewer to advance between steps.
-- Keep event timeouts separate from time spent waiting for the viewer.
+- Show the current step in the `tmux` status line and run it automatically after a five-second delay.
+- Explain each step in a separate Walkthrough window and bind `w` to switch between that window and the chat panes.
+- Bind `q` to exit during playback or after completion.
+- Keep event timeouts separate from the five-second pacing delays.
 - Leave the completed transcript visible until the viewer exits the demo.
 
 ## Cleanup
@@ -79,4 +83,4 @@ Apply when either mode finishes, fails, or is interrupted.
 1. Implement the offline behavior and queued-message feedback in both clients and the API.
 2. Extend the integration harness and add the headless Make target.
 3. Add the visible terminal adapter and demo Make target using the same scenario.
-4. Document prerequisites and commands in the [chat README](../../apps/chat/README.md).
+4. Keep prerequisites and commands in the [runner guide](../../tools/offline_delivery/README.md).

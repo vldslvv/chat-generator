@@ -1,0 +1,19 @@
+{
+  "prepare": [
+    {"command": ["uv", "sync", "--frozen", "--project", "api"]},
+    {"command": ["uv", "sync", "--frozen", "--project", "python-client"]},
+    {"command": ["cargo", "build", "--locked", "--manifest-path", "rust-client/Cargo.toml"]}
+  ],
+  "server": {
+    "cwd": "api",
+    "command": ["uv", "run", "--frozen", "uvicorn", "chat.api:create_app", "--factory", "--host", "127.0.0.1", "--port", "{port}"]
+  },
+  "python": {
+    "cwd": "python-client",
+    "command": ["uv", "run", "--frozen", "chat-python", "--url", "{url}"]
+  },
+  "rust": {
+    "cwd": "rust-client",
+    "command": ["./target/debug/chat-rust", "--url", "{url}"]
+  }
+}

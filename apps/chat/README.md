@@ -93,26 +93,28 @@ Build it in that directory and run it with `docker run --rm -it`, passing
 
 ## Offline delivery test and demo
 
-Install both Python environments with `uv sync --frozen` in their respective API
-and client directories; install Cargo to build the Rust client.
-Run these commands from the repository root:
+Install `uv` and Cargo. Both targets sync the Python environments and build the
+Rust client automatically. Run these commands from the repository root:
 
 ```sh
 make test-offline-delivery
 make demo-offline-delivery
 ```
 
-Both commands build the Rust binary and start a fresh server on an available local
-port. The headless pytest run checks Alice in Python and Bob in Rust, then swaps
+Both commands use `apps/chat/offline-delivery.json` to start a fresh server on an available local
+port. The durable runner and its configuration format are documented in the
+[runner guide](../../tools/offline_delivery/README.md).
+The headless pytest run checks Alice in Python and Bob in Rust, then swaps
 the languages with a fresh server. Each run keeps all three processes alive while
 clients disconnect, queue messages, and reconnect. It checks CLI output and server
 acceptance; API and storage tests verify acknowledgment records and pending state.
 
 The visual demo also requires `tmux` and an interactive terminal. It opens a dedicated
-session with Server, Alice, and Bob panes. Press Space to run the step shown in the
-status line and q to exit. The completed transcript stays visible until you advance
-or exit. If already inside tmux, launch the demo from a terminal outside tmux.
-Viewer pauses do not count toward event timeouts. The runners stop their own
+session with Server, Alice, and Bob panes in the Chats window. Steps run
+automatically with a five-second delay before each action. Press w to switch to
+the Walkthrough explanation window and back, and q to exit. The completed
+transcript stays visible until you exit. If already inside tmux, launch the demo
+from a terminal outside tmux. Pacing delays do not count toward event timeouts. The runners stop their own
 processes on completion or interruption and leave unrelated tmux sessions alone.
 Failures include the current step and captured output; demo failures save a
 transcript in the reported temporary directory.
