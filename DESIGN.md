@@ -44,3 +44,13 @@ There are two conceptual entities: api and chat
 The API behavior is defined in the [API task](specs/spec_chat/tasks/01_api.md).
 
 The clients follow [shared behavior](specs/spec_chat/tasks/shared/client.md), with language-specific requirements in the [Python](specs/spec_chat/tasks/02_python_client.md) and [Rust](specs/spec_chat/tasks/03_rust_client.md) tasks.
+
+Both clients implement the same protocol and terminal commands. The shared spec owns their behaviour, while the language tasks define the libraries and tooling. This lets the two implementations evolve together without duplicating the requirements.
+
+The API uses FastAPI and Uvicorn, with users and messages stored in memory. Clients keep outgoing messages in memory until the server accepts them. The server keeps accepted messages pending until the recipient acknowledges them, so acceptance and delivery are separate events.
+
+Offline delivery works in both directions: a disconnected sender queues messages locally, and the server holds messages for an offline recipient. After login, each side flushes its pending messages. This is limited to running processes; queues do not survive restarts, and automatic reconnection and duplicate handling are left for later.
+
+Client responsibilities are split into terminal interaction, transport, connection state, protocol handling and outgoing queues. State stays separate from the logic that operates on it. Slow network writes must not block incoming messages, status commands or disconnect actions.
+
+The [verification scenarios](specs/spec_chat/verification.md) check observable behaviour through real connections, including failures and reconnects. The offline scenario runs with Alice in Python and Bob in Rust, then swaps the languages. The launch contract keeps the external test and demo usable after regeneration.

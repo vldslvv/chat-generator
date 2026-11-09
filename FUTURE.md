@@ -9,3 +9,9 @@
 - Consider a durable delivery system such as Kafka if traffic justifies it.
 - Add transport and storage encryption, then design end-to-end encryption and key management.
 - Extend the shared spec with a new feature, regenerate both clients, and verify they still work together.
+
+## Agentic workflow
+
+- Replace the Supervisor agent with an orchestration script to significantly reduce token usage.
+- Add deterministic specification validation to replace checks that currently rely on an LLM as a judge.
+- Consider an architecture definition language and validate the final implementation against it.
