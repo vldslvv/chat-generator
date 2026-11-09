@@ -66,7 +66,7 @@ Validate the acknowledgment before updating the stored message.
 
 **Effects:** Record the acknowledgment.
 
-**Outputs:** `delivery_receipt` to the sender if connected, or `error` to the acknowledging client on validation failure.
+**Outputs:** No success reply or sender notification; return `error` to the acknowledging client on validation failure.
 
 ## Tables
 

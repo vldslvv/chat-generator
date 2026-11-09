@@ -28,6 +28,29 @@ Apply these rules when handling commands.
 - Keep the CLI running after detected connection loss and require `/connect` to reconnect.
 - Do not queue messages, retry sends, or reconnect automatically.
 
+## Client state
+
+Keep these fields in memory using language-neutral types.
+`Optional<T>` means a value or `null`, and `Enum<...>` lists allowed values.
+Use the [shared UUID and UTC timestamp types](websocket.md#shared-types) and the [user record](storage.md#users).
+
+- `server_url: String` — configured WebSocket URL.
+- `connection: Optional<ConnectionHandle>` — opaque handle to the active WebSocket, initially `null`.
+- `connection_state: Enum<disconnected, connecting, connected>` — initially `disconnected`.
+- `session_state: Enum<none, login_pending, logged_in>` — initially `none`.
+- `login_username: Optional<String>` — requested name during connection or login, initially `null`.
+- `authenticated_user: Optional<User>` — ID and name returned by `login_ok`, initially `null`.
+- `remembered_username: Optional<String>` — last successfully logged-in name, initially `null`.
+- `last_heartbeat_at: Optional<UtcTimestamp>` — latest received ping's local time, initially `null`.
+
+Apply these state lifecycle rules.
+
+- Clear `login_username` when login completes or the connection attempt fails.
+- Reset the connection handle, connection state, session state, login username, and authenticated user on disconnection.
+- Retain the server URL, remembered username, and last heartbeat across disconnections.
+- Keep no delivery queue, pending-request map, or message-status map.
+- Discard all state when the CLI exits.
+
 ## Status
 
 Display these fields for `/status` in every connection state.
@@ -43,13 +66,10 @@ The remembered username is retained separately from the authenticated user shown
 
 ## Behavior
 
-Apply these indicators to outgoing messages.
+Apply these rules when displaying server events.
 
-- Display `… Pending` after sending a request while awaiting the server's response.
-- Display `✓ Accepted <message_id>` only after receiving `message_accepted`, indicating storage with recipient acknowledgment pending.
-- Display `✓✓ Acknowledged <message_id>` after receiving `delivery_receipt`.
-- Display `✗ Rejected: <description>` when the server explicitly rejects the send request.
-- Display `? Outcome unknown` if the connection drops before the server's response arrives.
-- Preserve accepted status when the connection drops before acknowledgment.
-- Match send replies through `correlation_id` and delivery receipts through `message_id`.
-- Append status updates as new lines instead of modifying earlier output.
+- Display `✓ Accepted <message_id>` only after receiving `message_accepted`, confirming server receipt and storage.
+- Display `✗ Error: <description>` when the server returns `error`.
+- Display incoming messages and acknowledge them so the server can record receipt timestamps.
+- Do not display recipient acknowledgment status to the sender.
+- Append output as new lines instead of modifying earlier output.

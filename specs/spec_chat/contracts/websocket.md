@@ -29,7 +29,7 @@ Apply these correlation rules to each connection.
 - Omit `correlation_id` from server notifications.
 - Omit `correlation_id` from an error when the malformed request has no valid correlation ID.
 - Determine processing and delivery order on the server independently of correlation and message IDs.
-- Use the server-generated message ID to associate delivery receipts with stored messages.
+- Use the server-generated message ID to associate recipient acknowledgments with stored messages.
 
 A correlation ID identifies a request, including one rejected before a message exists.
 A message ID identifies a stored message across delivery and acknowledgment.
@@ -101,6 +101,8 @@ If Bob is offline, the server correlates the error with that request.
 - `message_id: UUID` — message being acknowledged.
 - `recipient_received_at: ClientTimestampInput` — optional recipient timestamp.
 
+A valid `ack` updates server records without a success reply or a notification to the original sender.
+
 Example request acknowledging a received message:
 
 ```json
@@ -125,21 +127,11 @@ Reply to a successful login with `data` matching the [users contract](storage.md
 ### message_accepted
 
 Reply to an accepted send with `data` matching the [messages contract](storage.md#messages).
-Acceptance confirms storage only; delivery remains unconfirmed without a `delivery_receipt`.
+Acceptance confirms server receipt and storage only; the server does not notify the sender of recipient acknowledgment.
 
 ### message_received
 
 Notify the recipient of an incoming message with `data` matching the [messages contract](storage.md#messages).
-
-### delivery_receipt
-
-Notify the original sender of a valid acknowledgment if still connected, using these fields inside `data`.
-
-- `message_id: UUID`.
-- `recipient_received_at: UtcTimestamp | 0`.
-- `server_ack_received_at: UtcTimestamp`.
-
-A valid `ack` produces a delivery receipt for the original sender without a separate success reply to the acknowledging client.
 
 ### error
 

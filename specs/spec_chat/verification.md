@@ -11,13 +11,13 @@ Apply when preparing API verification.
 - Verify WebSocket behavior through replies, notifications, and connection lifecycle.
 - Verify storage invariants through the storage module's public operations.
 - Verify session cleanup by successfully logging in again after disconnection.
-- Verify acknowledgment timestamps through delivery receipts.
+- Verify acknowledgment timestamps through the storage module's public operations.
 
 ## Scenarios
 
 Use these scenarios as a checklist for the [API behavior](tasks/01_api.md) and [WebSocket contract](contracts/websocket.md).
 
-- Log in as Alice and Bob, send a message, and acknowledge it as Bob; verify acceptance, received content, and the delivery receipt refer to the same stored message.
+- Log in as Alice and Bob, send a message, and acknowledge it as Bob; verify acceptance and received content refer to the same stored message, with acknowledgment recorded only on the server.
 - Submit invalid requests and repeat login; verify errors leave the connection open and existing state unchanged.
 - Submit missing or malformed client timestamps; verify the stored values become `0`.
 - Repeat an acknowledgment; verify the first acknowledgment timestamps remain unchanged.
