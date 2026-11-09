@@ -22,7 +22,7 @@ WORKFLOW_REASONING ?= medium
 
 help:
 	@echo "make test-offline-delivery  Check queued delivery with both client language assignments"
-	@echo "make demo-offline-delivery  Play the offline scenario every 5s; w explains, q exits"
+	@echo "make demo-offline-delivery  Play the offline scenario every 5s with walkthrough; q exits"
 	@echo "make eval-specs    Report on current specs against bundle templates; no repairs"
 	@echo "                       SPEC_BUNDLE=specs/todolist (default: all bundles)"
 	@echo "                       SPECS_MODEL=gpt-6-astra SPECS_REASONING=medium SPECS_TIMEOUT=1800 (defaults)"

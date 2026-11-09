@@ -110,9 +110,9 @@ clients disconnect, queue messages, and reconnect. It checks CLI output and serv
 acceptance; API and storage tests verify acknowledgment records and pending state.
 
 The visual demo also requires `tmux` and an interactive terminal. It opens a dedicated
-session with Server, Alice, and Bob panes in the Chats window. Steps run
-automatically with a five-second delay before each action. Press w to switch to
-the Walkthrough explanation window and back, and q to exit. The completed
+session with Server, Alice, Bob and Walkthrough panes together in one window.
+Steps run automatically with a five-second delay before each action, while the
+Walkthrough explains what is happening. Press q to exit. The completed
 transcript stays visible until you exit. If already inside tmux, launch the demo
 from a terminal outside tmux. Pacing delays do not count toward event timeouts. The runners stop their own
 processes on completion or interruption and leave unrelated tmux sessions alone.

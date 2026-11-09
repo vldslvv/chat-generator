@@ -88,4 +88,4 @@ Verify the public commands against real processes.
 - Exchange a message in both directions and verify each client uses the supplied server URL.
 - Stop the clients with `/quit` and stop the server with SIGTERM, verifying all three processes exit.
 - Run both offline delivery Make targets against the regenerated configuration without modifying the durable runner.
-- Verify both headless language assignments pass and the demo advances automatically every five seconds, provides a Walkthrough window, and supports exiting and cleanup.
+- Verify both headless language assignments pass and the demo advances automatically every five seconds, shows a Walkthrough pane alongside the three process panes in the same window, and supports exiting and cleanup.

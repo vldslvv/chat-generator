@@ -66,7 +66,7 @@ Apply these rules to the interactive demo.
 - Open a dedicated `tmux` session with labeled Server, Alice, and Bob panes running the actual processes.
 - Enter CLI commands visibly in the appropriate pane and observe output using the same scenario checks.
 - Show the current step in the `tmux` status line and run it automatically after a five-second delay.
-- Explain each step in a separate Walkthrough window and bind `w` to switch between that window and the chat panes.
+- Explain each step in a labeled Walkthrough pane visible alongside Server, Alice and Bob in the same tmux window.
 - Bind `q` to exit during playback or after completion.
 - Keep event timeouts separate from the five-second pacing delays.
 - Leave the completed transcript visible until the viewer exits the demo.
