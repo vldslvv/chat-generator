@@ -3,6 +3,18 @@
 Verification is not run yet; execution is deferred until an automated WebSocket test harness exists.
 The Python and Rust application clients are not required.
 
+## Check boundaries
+
+Apply when preparing API verification.
+
+- Follow the shared [check policy](../../agentic-workflow/policies/CHECKS.md#prepare-checks).
+- Verify WebSocket behavior through replies, notifications, and connection lifecycle.
+- Verify storage invariants through the storage module's public operations.
+- Verify session cleanup by successfully logging in again after disconnection.
+- Verify acknowledgment timestamps through delivery receipts.
+
+## Scenarios
+
 Use these scenarios as a checklist for the [API behavior](tasks/01_api.md) and [WebSocket contract](contracts/websocket.md).
 
 - Log in as Alice and Bob, send a message, and acknowledge it as Bob; verify acceptance, received content, and the delivery receipt refer to the same stored message.
